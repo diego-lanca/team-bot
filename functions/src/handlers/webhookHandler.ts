@@ -1,9 +1,9 @@
 import { sendMessage } from "../services/twilioService";
 import { route } from "../bot/router";
-import { onRequest } from "firebase-functions/https";
+import { onRequest } from "firebase-functions/v2/https";
 import { fetchUser } from "../services/userService";
 // Função webhook
-exports.webhook = onRequest(
+export const webhook = onRequest(
   { timeoutSeconds: 1200 },
   async (req, res): Promise<void> => {
     if (req.method !== "POST") {

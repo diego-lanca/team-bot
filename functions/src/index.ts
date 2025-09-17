@@ -8,10 +8,7 @@
  */
 
 import { setGlobalOptions } from "firebase-functions";
-import { onRequest } from "firebase-functions/https";
-import * as logger from "firebase-functions/logger";
 import { initializeApp } from "firebase-admin";
-import { getFirestore } from "firebase-admin/firestore";
 
 // Start writing functions
 // https://firebase.google.com/docs/functions/typescript
@@ -29,6 +26,8 @@ import { getFirestore } from "firebase-admin/firestore";
 setGlobalOptions({ maxInstances: 10 });
 
 initializeApp();
+
+export { webhook } from "./handlers/webhookHandler";
 
 // export const helloWorld = onRequest((request, response) => {
 //   logger.info("Hello logs!", {structuredData: true});
