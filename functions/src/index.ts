@@ -8,7 +8,7 @@
  */
 
 import { setGlobalOptions } from "firebase-functions";
-import { initializeApp } from "firebase-admin";
+import * as admin from "firebase-admin";
 
 // Start writing functions
 // https://firebase.google.com/docs/functions/typescript
@@ -25,7 +25,7 @@ import { initializeApp } from "firebase-admin";
 // this will be the maximum concurrent request count.
 setGlobalOptions({ maxInstances: 10 });
 
-initializeApp();
+admin.initializeApp();
 
 export { webhook } from "./handlers/webhookHandler";
 
