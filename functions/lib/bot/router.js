@@ -12,7 +12,7 @@ async function route(user, msg) {
     if (!session)
         return (0, welcome_1.welcome)();
     if (session.step == 'ask_name') {
-        return (0, askName_1.askName)(msg);
+        console.log((0, askName_1.askName)(msg));
     }
     const daysDiff = (0, date_fns_1.differenceInDays)(new Date(), session.updatedAt.toDate());
     if (daysDiff > 0) {

@@ -13,7 +13,7 @@ export async function route(user: UserDoc, msg: string): Promise<string> {
   if (!session) return welcome();
 
   if (session.step == 'ask_name') {
-    return askName(msg);
+    console.log (askName(msg));
   }
 
   const daysDiff = differenceInDays(new Date(), session.updatedAt.toDate());
