@@ -39,13 +39,15 @@ module.exports = {
       files: ["*.ts"],
       extends: ["plugin:@typescript-eslint/recommended"],
       parserOptions: {
-        // A opção "project" agora vive aqui dentro.
-        project: ["./tsconfig.json", "./tsconfig.dev.json"],
+        project: [
+          `${__dirname}/tsconfig.json`,
+          `${__dirname}/tsconfig.dev.json`,
+        ],
       },
       rules: {
         // Regras específicas de TypeScript.
         "@typescript-eslint/no-explicit-any": "warn",
-        "@typescript-eslint/explicit-function-return-type": "error", // Use 'error' em vez de 2 para clareza
+        "@typescript-eslint/explicit-function-return-type": "error",
         "@typescript-eslint/no-unused-vars": [
           "warn",
           { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },

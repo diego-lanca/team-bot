@@ -33,7 +33,10 @@ export async function getUserByPhone(phone: string): Promise<UserDoc | null> {
   return { id: doc.id, ...(doc.data() as User) };
 }
 
-export async function setUser(userId: string, userData: User): Promise<void> {
+export async function setUser(
+  userId: string,
+  userData: Partial<User>
+): Promise<void> {
   const user = {
     ...userData,
     lastSeen: Timestamp.now(),

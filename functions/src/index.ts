@@ -27,7 +27,7 @@ setGlobalOptions({ maxInstances: 10 });
 
 admin.initializeApp();
 
-export { webhook } from "./handlers/webhookHandler";
+export { onMessage } from "./handlers/webhookHandler";
 
 // export const helloWorld = onRequest((request, response) => {
 //   logger.info("Hello logs!", {structuredData: true});

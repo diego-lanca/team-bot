@@ -1,9 +1,10 @@
-import { sendMessage } from "../services/twilioService";
+// import { sendMessage } from "../services/twilioService";
 import { route } from "../bot/router";
 import { onRequest } from "firebase-functions/v2/https";
 import { fetchUser } from "../services/userService";
-// Função webhook
-export const webhook = onRequest(
+
+// Função onMessage
+export const onMessage = onRequest(
   { timeoutSeconds: 1200 },
   async (req, res): Promise<void> => {
     if (req.method !== "POST") {
@@ -17,8 +18,8 @@ export const webhook = onRequest(
     const user = await fetchUser(from);
 
     const reply = await route(user, userMessage);
-    await sendMessage(from, reply);
+    // await sendMessage(from, reply);
 
-    res.status(200).end();
+    res.status(200).send(reply);
   }
 );
