@@ -21,14 +21,6 @@ export interface User {
   medicalConditions?: string[]; // ex: ['hipertensão', 'diabetes']
   injuries?: string[]; // ex: ['joelho direito', 'ombro esquerdo']
   medications?: string[]; // ex: ['insulina', 'anti-inflamatório']
-
-  // Preferências de treino
-  preferredTrainingType?:
-    | "musculação"
-    | "cardio"
-    | "hiit"
-    | "yoga"
-    | "crossfit";
 }
 
 export enum Goal {

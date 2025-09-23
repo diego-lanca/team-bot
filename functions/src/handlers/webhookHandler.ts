@@ -2,7 +2,7 @@
 import { route } from "../bot/router";
 import { onRequest } from "firebase-functions/v2/https";
 import { fetchUser } from "../services/userService";
-//import { sendMessage } from "../services/twilioService";
+// import { sendMessage } from "../services/twilioService";
 
 // Função onMessage
 export const onMessage = onRequest(
@@ -19,7 +19,7 @@ export const onMessage = onRequest(
     const user = await fetchUser(from);
 
     const reply = await route(user, userMessage);
-    //await sendMessage(from, reply);
+    // await sendMessage(from, reply);
 
     res.status(200).send(reply);
   }

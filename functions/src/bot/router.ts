@@ -10,11 +10,7 @@ import {
   handleName,
   handleProfileMenu,
 } from "../handlers/stepHandler";
-import {
-  handleHeight,
-  handleSex,
-  handleWeight,
-} from "../handlers/profileMenuHandler";
+import { handleProfileOptions } from "../handlers/profileMenuHandler";
 
 export async function route(user: UserDoc, msg: string): Promise<string> {
   const session = await getSession(user.id);
@@ -31,9 +27,7 @@ export async function route(user: UserDoc, msg: string): Promise<string> {
     ask_age: handleAge,
     main_menu: handleMenu,
     profile_menu: handleProfileMenu,
-    edit_sex: handleSex,
-    edit_height: handleHeight,
-    edit_weight: handleWeight,
+    ...handleProfileOptions(),
   };
 
   const handler = stepHandlers[session.step];

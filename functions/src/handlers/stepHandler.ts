@@ -64,39 +64,84 @@ export async function handleProfileMenu(
   const option = msg.trim();
 
   const mapping: Record<string, { step: string; question: string }> = {
-    "1": { step: "edit_name", question: "Digite o novo nome:" },
-    "2": { step: "edit_age", question: "Digite sua idade:" },
+    "1": {
+      step: "edit_name",
+      question: `📝 Nome atual: ${user.name ?? "—"}\nDigite o novo nome:`,
+    },
+    "2": {
+      step: "edit_age",
+      question: `${
+        user.age ? `🎂 Idade atual: ${user.age}\n` : ""
+      }Digite sua idade:`,
+    },
     "3": {
       step: "edit_sex",
-      question: "Digite M para Masculino ou F para Feminino:",
+      question: `${
+        user.sex ? `⚧ Sexo atual: ${user.sex}\n` : ""
+      }Digite *M* para Masculino ou *F* para Feminino:`,
     },
     "4": {
       step: "edit_height",
-      question: "Digite sua altura em metros (ex: 1.75):",
+      question: `${
+        user.height ? `📏 Altura atual: ${user.height} m\n` : ""
+      }Digite sua altura em metros (ex: 1.75):`,
     },
-    "5": { step: "edit_weight", question: "Digite seu peso em kg (ex: 70):" },
+    "5": {
+      step: "edit_weight",
+      question: `${
+        user.weight ? `⚖️ Peso atual: ${user.weight} kg\n` : ""
+      }Digite seu peso em kg (ex: 70):`,
+    },
     "6": {
       step: "edit_bodyfat",
-      question: "Digite sua % de gordura corporal:",
+      question: `${
+        user.bodyFatPercentage
+          ? `💪 Gordura corporal atual: ${user.bodyFatPercentage}%\n`
+          : ""
+      }Digite sua % de gordura corporal:`,
     },
     "7": {
       step: "edit_goal",
-      question: "Qual é sua meta? (ex: perder peso, ganhar massa…)",
+      question:
+        `${
+          user.goal ? `🎯 Meta atual: ${user.goal}\n` : ""
+        }Escolha sua meta:\n1️⃣ Perda de peso\n2️⃣ Ganho de massa\n` +
+        "3️⃣ Resistência\n4️⃣ Saúde geral",
     },
     "8": {
       step: "edit_activity",
       question:
-        "Qual é seu nível de atividade? (sedentário, moderado, intenso…)",
+        `${
+          user.activityLevel
+            ? `🏃‍♂️ Nível de atividade atual: ${user.activityLevel}\n`
+            : ""
+        }Escolha seu nível de atividade:\n1️⃣ Sedentário\n2️⃣ Leve\n` +
+        "3️⃣ Moderado\n4️⃣ Intenso",
     },
     "9": {
       step: "edit_conditions",
-      question: "Liste condições médicas relevantes:",
+      question: `${
+        user.medicalConditions
+          ? `🩺 Condições médicas atuais: ${user.medicalConditions}\n`
+          : ""
+      }Liste condições médicas relevantes: (ex: Diabetes, Hipertensão)`,
     },
     "10": {
       step: "edit_injuries",
-      question: "Informe lesões atuais ou anteriores:",
+      question: `${
+        user.injuries ? `🤕 Lesões registradas: ${user.injuries}\n` : ""
+      }Informe lesões atuais ou anteriores: (ex: Ombro esquerdo, Mão direita)`,
     },
-    "11": { step: "edit_medications", question: "Liste medicamentos em uso:" },
+    "11": {
+      step: "edit_medications",
+      question: `${
+        user.medications ? `💊 Medicamentos em uso: ${user.medications}\n` : ""
+      }Liste medicamentos em uso:`,
+    },
+    "0": {
+      step: 'main_menu',
+      question: mainMenu(),
+    },
   };
 
   const choice = mapping[option];

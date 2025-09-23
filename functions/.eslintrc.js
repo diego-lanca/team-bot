@@ -27,6 +27,11 @@ module.exports = {
     "quotes": 0,
     "semi": ["error", "always"],
     "object-curly-spacing": ["error", "always"],
+    "operator-linebreak": [
+      "error",
+      "after",
+      { overrides: { "?": "ignore", ":": "ignore" } },
+    ],
     "comma-dangle": ["error", "always-multiline"],
     "import/no-unresolved": 0,
     "valid-jsdoc": "off",
