@@ -2,7 +2,6 @@ import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { UserDoc, User } from "../models/user";
 
 const db = getFirestore();
-
 const usersRef = db.collection("users");
 
 export async function fetchUser(phone: string): Promise<UserDoc> {
@@ -43,4 +42,15 @@ export async function setUser(
   };
 
   await usersRef.doc(userId).set(user, { merge: true });
+}
+
+export function hasRequiredInfos(user: User): boolean {
+  return (
+    user.sex != undefined &&
+    user.height != undefined &&
+    user.weight != undefined &&
+    user.age != undefined &&
+    user.goal != undefined &&
+    user.activityLevel != undefined
+  );
 }

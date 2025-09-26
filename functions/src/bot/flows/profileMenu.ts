@@ -15,6 +15,6 @@ export function profileMenu(): string {
     "1️⃣1️⃣ 💊 Medicações\n" +
     "0️⃣ 🔙 Voltar\n\n" +
     "————————————\n" +
-    "✏️ *Digite o número* ou o *nome da informação* que quer atualizar."
+    "✏️ *Digite o número* da informação que quer atualizar."
   );
 }

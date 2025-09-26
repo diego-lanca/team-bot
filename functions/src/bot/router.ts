@@ -9,8 +9,10 @@ import {
   handleMenu,
   handleName,
   handleProfileMenu,
+  handleTrainingMenu,
 } from "../handlers/stepHandler";
 import { handleProfileOptions } from "../handlers/profileMenuHandler";
+import { handleTrainingOptions } from "../handlers/trainingMenuHandler";
 
 export async function route(user: UserDoc, msg: string): Promise<string> {
   const session = await getSession(user.id);
@@ -27,7 +29,9 @@ export async function route(user: UserDoc, msg: string): Promise<string> {
     ask_age: handleAge,
     main_menu: handleMenu,
     profile_menu: handleProfileMenu,
+    training_menu: handleTrainingMenu,
     ...handleProfileOptions(),
+    ...handleTrainingOptions(),
   };
 
   const handler = stepHandlers[session.step];

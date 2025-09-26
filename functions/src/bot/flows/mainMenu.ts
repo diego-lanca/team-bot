@@ -5,9 +5,8 @@ export function mainMenu(): string {
     "Escolha uma opção para começar:\n\n" +
     "1️⃣ 🏋️ Treinos Personalizados\n" +
     "2️⃣ 🍎 Plano Alimentar\n" +
-    "3️⃣ 📊 Progresso & Estatísticas\n" +
-    "4️⃣ 💡 Dicas Rápidas\n" +
-    "5️⃣ 👤 Perfil\n\n" +
+    "3️⃣ 🤖 Falar com Especialista Virutal\n" +
+    "4️⃣ 👤 Perfil\n\n" +
     "➡️ *Digite o número* ou o *nome da opção* para continuar."
   );
 }

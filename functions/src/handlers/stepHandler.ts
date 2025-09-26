@@ -33,7 +33,7 @@ export async function handleMenu(user: UserDoc, msg: string): Promise<string> {
 
   const mapping: Record<string, { step: string; text: string }> = {
     "1": {
-      step: "workout_menu",
+      step: "training_menu",
       text: "Você escolheu: Treinos Personalizados.",
     },
     "2": { step: "nutrition_menu", text: "Você escolheu: Plano Alimentar." },
@@ -41,7 +41,6 @@ export async function handleMenu(user: UserDoc, msg: string): Promise<string> {
       step: "progress_menu",
       text: "Você escolheu: Progresso & Estatísticas.",
     },
-    "4": { step: "quick_tips", text: "Você escolheu: Dicas Rápidas." },
     "5": { step: "profile_menu", text: profileMenu() },
   };
 
@@ -137,6 +136,34 @@ export async function handleProfileMenu(
       question: `${
         user.medications ? `💊 Medicamentos em uso: ${user.medications}\n` : ""
       }Liste medicamentos em uso:`,
+    },
+    "0": {
+      step: 'main_menu',
+      question: mainMenu(),
+    },
+  };
+
+  const choice = mapping[option];
+  if (!choice) return "Opção inválida. Digite um número de 1 a 12.";
+
+  await setSession(user.id, { step: choice.step });
+  return choice.question;
+}
+
+export async function handleTrainingMenu(
+  user: UserDoc,
+  msg: string
+): Promise<string> {
+  const option = msg.trim();
+
+  const mapping: Record<string, { step: string; question: string }> = {
+    "1": {
+      step: "see_training",
+      question: 'Digite "Confirmo"',
+    },
+    "2": {
+      step: "generate_trainings",
+      question: 'Digite "Confirmo"',
     },
     "0": {
       step: 'main_menu',
