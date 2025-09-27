@@ -5,13 +5,12 @@ const db = getFirestore();
 const sessionsRef = db.collection("sessions");
 
 export async function getSession(userId: string): Promise<Session | null> {
-  const snapshot = await sessionsRef
-    .where("userId", "==", userId)
-    .limit(1)
-    .get();
+  // Busca o documento diretamente pelo seu ID (a "etiqueta da gaveta")
+  const docRef = sessionsRef.doc(userId);
+  const docSnap = await docRef.get();
 
-  if (snapshot.empty) return null;
-  return snapshot.docs[0].data() as Session;
+  // Se existir, retorna os dados do documento
+  return docSnap.data() as Session;
 }
 
 export async function setSession(

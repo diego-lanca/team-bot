@@ -5,6 +5,7 @@ import { UserDoc } from "../models/user";
 import { setSession } from "../services/firestoreService";
 import { setUser } from "../services/userService";
 import { parseAge } from "../utils/utils";
+import { trainingMenu } from "../bot/flows/trainingMenu";
 
 export async function handleName(user: UserDoc, msg: string): Promise<string> {
   const userName = msg.trim();
@@ -34,20 +35,26 @@ export async function handleMenu(user: UserDoc, msg: string): Promise<string> {
   const mapping: Record<string, { step: string; text: string }> = {
     "1": {
       step: "training_menu",
-      text: "Você escolheu: Treinos Personalizados.",
+      text: trainingMenu(),
     },
-    "2": { step: "nutrition_menu", text: "Você escolheu: Plano Alimentar." },
+    "2": { 
+      step: "nutrition_menu", 
+      text: "Você escolheu: Plano Alimentar." 
+    },
     "3": {
-      step: "progress_menu",
-      text: "Você escolheu: Progresso & Estatísticas.",
+      step: "virtual_specialist_menu",
+      text: "Você escolheu: Falar com Especialista Virtual.",
     },
-    "5": { step: "profile_menu", text: profileMenu() },
+    "4": { 
+      step: "profile_menu", 
+      text: profileMenu()
+    },
   };
 
   const choice = mapping[option] || mapping[msg.toLowerCase()];
   if (!choice) {
     return (
-      "Opção inválida. Digite um número de 1 a 5 ou o nome da opção.\n\n" +
+      "Opção inválida. Por favor, digite um número de 1 a 4.\n\n" +
       mainMenu()
     );
   }

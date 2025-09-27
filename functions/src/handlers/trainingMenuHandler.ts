@@ -25,7 +25,7 @@ export async function handleSeeTraining(
   const training = await getUserTraining(user.id);
   if (!training) return "Você não tem nenhum treino programado!";
 
-  const today = new Date().getDay;
+  //const today = new Date().getDay;
 
   return training.week.monday?.exercises[0].name ?? "";
 }
