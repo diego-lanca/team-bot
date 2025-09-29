@@ -161,26 +161,91 @@ export async function handleTrainingMenu(
   user: UserDoc,
   msg: string
 ): Promise<string> {
-  const option = msg.trim();
+  const option = msg.trim().match(/\d+/)?.[0] || '';
 
   const mapping: Record<string, { step: string; question: string }> = {
-    "1": {
-      step: "see_training",
-      question: 'Digite "Confirmo"',
+    '1': {
+      step: 'see_training_confirm', 
+      question:
+        `Ok, ${user.name}! Vou buscar seu treino atual. 👍\n` +
+        `Posso prosseguir? Digite "sim" ou "confirmo".`,
     },
-    "2": {
-      step: "generate_trainings",
-      question: 'Digite "Confirmo"',
+    '2': {
+      step: 'generate_training_confirm',
+      question:
+        `Perfeito! Estou pronto para criar um novo treino incrível para você. 💪\n` +
+        `Vamos começar? Digite "sim" ou "confirmo".`,
     },
-    "0": {
+    '0': {
       step: 'main_menu',
       question: mainMenu(),
     },
   };
 
   const choice = mapping[option];
-  if (!choice) return "Opção inválida. Digite um número de 1 a 12.";
+
+  if (!choice) {
+    const validOptions = Object.keys(mapping)
+      .map((key) => `"${key}"`)
+      .join(', ');
+    return `Opção inválida, ${user.name}. Por favor, escolha uma das opções disponíveis: ${validOptions}.`;
+  }
 
   await setSession(user.id, { step: choice.step });
   return choice.question;
+}
+
+export async function handleNutritionMenu(
+  user: UserDoc,
+  msg: string
+): Promise<string> {
+  const option = msg.trim().match(/\d+/)?.[0] || '';
+
+  const mapping: Record<string, { step: string; question: string }> = {
+    '1': {
+      step: 'see_daily_plan_confirm',
+      question:
+        `Ok, ${user.name}! Vou buscar seu plano alimentar de hoje. 👍\n` +
+        `Posso continuar? Digite "sim" para confirmar.`,
+    },
+    '2': {
+      step: 'see_weekly_plan_confirm',
+      question:
+        `Certo! Preparando para exibir o plano da semana toda. 📅\n` +
+        `Podemos prosseguir? Digite "sim" para confirmar.`,
+    },
+    '3': {
+      step: 'see_substitutions_confirm',
+      question:
+        `Boa! Vou carregar a lista de substituições de alimentos. 🥦\n` +
+        `Confirma? Digite "sim".`,
+    },
+    '0': {
+      step: 'main_menu',
+      question: mainMenu(),
+    },
+  };
+
+  // Procura a escolha do usuário no mapeamento
+  const choice = mapping[option];
+
+  if (!choice) {
+    const validOptions = Object.keys(mapping)
+      .map((key) => `"${key}"`)
+      .join(', ');
+    return `Opção inválida, ${user.name}. Por favor, escolha uma das opções disponíveis: ${validOptions}.`;
+  }
+
+  // Atualiza a sessão do usuário com o novo passo
+  await setSession(user.id, { step: choice.step });
+
+  // Retorna a pergunta/resposta correspondente
+  return choice.question;
+}
+
+export async function handleVirtualSpecialistMenu(
+  user: UserDoc,
+  msg: string
+): Promise<string> {
+  return "Seção de Especialista Virtual em construção. Por favor, volte mais tarde.\n\n" + mainMenu();
 }
