@@ -1,11 +1,13 @@
 // Roteamento de mensagens
 import { differenceInDays } from "date-fns";
 import { UserDoc } from "../models/user";
-import { getSession } from "../services/firestoreService";
+import { getSession, setSession } from "../services/firestoreService";
 import { greetings } from "./flows/greetings";
 import { welcome } from "./flows/welcome";
 import {
   handleAge,
+  handleEditAge,
+  handleEditName,
   handleMenu,
   handleName,
   handleProfileMenu,
@@ -13,6 +15,7 @@ import {
 } from "../handlers/stepHandler";
 import { handleProfileOptions } from "../handlers/profileMenuHandler";
 import { handleTrainingOptions } from "../handlers/trainingMenuHandler";
+import { mainMenu } from "./flows/mainMenu";
 
 export async function route(user: UserDoc, msg: string): Promise<string> {
   const session = await getSession(user.id);
@@ -30,6 +33,8 @@ export async function route(user: UserDoc, msg: string): Promise<string> {
     main_menu: handleMenu,
     profile_menu: handleProfileMenu,
     training_menu: handleTrainingMenu,
+    edit_name: handleEditName,
+    edit_age: handleEditAge,
     ...handleProfileOptions(),
     ...handleTrainingOptions(),
   };
@@ -43,5 +48,10 @@ export async function route(user: UserDoc, msg: string): Promise<string> {
     return greetings();
   }
 
-  return 'Desculpa, não entendi. Digite "ajuda" para opções.';
+  if (msg.trim() === '0') {
+    await setSession(user.id, { step: 'main_menu' });
+    return mainMenu();
+  }
+
+  return 'Desculpa, não entendi. Digite "0" para voltar ao menu principal ou "ajuda" para ver as opções.';
 }

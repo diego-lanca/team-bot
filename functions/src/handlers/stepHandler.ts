@@ -156,6 +156,43 @@ export async function handleProfileMenu(
   return choice.question;
 }
 
+export async function handleEditName(user: UserDoc, msg: string): Promise<string> {
+  const newName = msg.trim();
+
+  // Validação simples para não aceitar nomes vazios
+  if (!newName) {
+    return "Nome inválido. Por favor, digite um nome válido.";
+  }
+
+  // Atualiza o nome do usuário no banco de dados
+  await setUser(user.id, { name: newName });
+
+  // Importante: Reseta o passo para o menu de perfil
+  await setSession(user.id, { step: 'profile_menu' });
+
+  // Retorna uma mensagem de sucesso e o menu novamente
+  return `✅ Nome atualizado para *${newName}*! Digite "0" para voltar ao menu principal.`;
+}
+
+export async function handleEditAge(user: UserDoc, msg: string): Promise<string> {
+  const newAge = parseInt(msg.trim(), 10);
+
+  // Valida se a idade é um número válido e está num intervalo razoável
+  if (isNaN(newAge) || newAge < 10 || newAge > 100) {
+    return "Idade inválida. Por favor, digite apenas números (ex: 30).";
+  }
+
+  // Atualiza a idade no banco de dados
+  await setUser(user.id, { age: newAge });
+
+  // Reseta o passo para o menu de perfil
+  await setSession(user.id, { step: 'profile_menu' });
+
+  // Retorna uma mensagem de sucesso e o menu novamente
+  return `✅ Idade atualizada para *${newAge} anos*! Digite "0" para voltar ao menu principal.`;
+}
+
+
 export async function handleTrainingMenu(
   user: UserDoc,
   msg: string
@@ -167,13 +204,13 @@ export async function handleTrainingMenu(
       step: "see_training_confirm",
       question:
         `Ok, ${user.name}! Vou buscar seu treino atual. 👍\n` +
-        `Posso prosseguir? Digite "sim" ou "confirmo".`,
+        `Digite *"sim"* para continuar ou *"0"* para voltar.`,
     },
     "2": {
       step: "generate_training_confirm",
       question:
         `Perfeito! Estou pronto para criar um novo treino incrível para você.` +
-        ` 💪\nVamos começar? Digite "sim" ou "confirmo".`,
+        ` 💪\nVamos começar? Digite *"sim"* para continuar ou *"0"* para voltar.`,
     },
     "0": {
       step: "main_menu",
@@ -226,7 +263,6 @@ export async function handleNutritionMenu(
     },
   };
 
-  // Procura a escolha do usuário no mapeamento
   const choice = mapping[option];
 
   if (!choice) {
@@ -237,10 +273,8 @@ export async function handleNutritionMenu(
     `Por favor, escolha uma das opções disponíveis: ${validOptions}.`;
   }
 
-  // Atualiza a sessão do usuário com o novo passo
   await setSession(user.id, { step: choice.step });
 
-  // Retorna a pergunta/resposta correspondente
   return choice.question;
 }
 
