@@ -3,4 +3,5 @@ export const env = {
   TWILIO_AUTH: process.env.TWILIO_AUTH ?? '',
   TWILIO_FROM: process.env.TWILIO_FROM ?? 'whatsapp:+55',
   OPENAI_KEY: process.env.OPENAI_KEY ?? '',
+  GENERATE_TRAIN_TEXT: process.env.GENERATE_TRAIN_TEXT ?? '',
 };

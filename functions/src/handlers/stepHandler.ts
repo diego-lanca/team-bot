@@ -16,7 +16,7 @@ export async function handleName(user: UserDoc, msg: string): Promise<string> {
 
 export async function handleAge(user: UserDoc, msg: string): Promise<string> {
   const age = parseAge(msg);
-  if (age === null) {
+  if (age === null || age < 12 && age > 100) {
     return "Por favor, digite um número válido para a sua idade.";
   }
 
@@ -37,25 +37,24 @@ export async function handleMenu(user: UserDoc, msg: string): Promise<string> {
       step: "training_menu",
       text: trainingMenu(),
     },
-    "2": { 
-      step: "nutrition_menu", 
-      text: "Você escolheu: Plano Alimentar." 
+    "2": {
+      step: "nutrition_menu",
+      text: "Você escolheu: Plano Alimentar.",
     },
     "3": {
       step: "virtual_specialist_menu",
       text: "Você escolheu: Falar com Especialista Virtual.",
     },
-    "4": { 
-      step: "profile_menu", 
-      text: profileMenu()
+    "4": {
+      step: "profile_menu",
+      text: profileMenu(),
     },
   };
 
   const choice = mapping[option] || mapping[msg.toLowerCase()];
   if (!choice) {
     return (
-      "Opção inválida. Por favor, digite um número de 1 a 4.\n\n" +
-      mainMenu()
+      "Opção inválida. Por favor, digite um número de 1 a 4.\n\n" + mainMenu()
     );
   }
 
@@ -145,7 +144,7 @@ export async function handleProfileMenu(
       }Liste medicamentos em uso:`,
     },
     "0": {
-      step: 'main_menu',
+      step: "main_menu",
       question: mainMenu(),
     },
   };
@@ -161,23 +160,23 @@ export async function handleTrainingMenu(
   user: UserDoc,
   msg: string
 ): Promise<string> {
-  const option = msg.trim().match(/\d+/)?.[0] || '';
+  const option = msg.trim().match(/\d+/)?.[0] || "";
 
   const mapping: Record<string, { step: string; question: string }> = {
-    '1': {
-      step: 'see_training_confirm', 
+    "1": {
+      step: "see_training_confirm",
       question:
         `Ok, ${user.name}! Vou buscar seu treino atual. 👍\n` +
         `Posso prosseguir? Digite "sim" ou "confirmo".`,
     },
-    '2': {
-      step: 'generate_training_confirm',
+    "2": {
+      step: "generate_training_confirm",
       question:
-        `Perfeito! Estou pronto para criar um novo treino incrível para você. 💪\n` +
-        `Vamos começar? Digite "sim" ou "confirmo".`,
+        `Perfeito! Estou pronto para criar um novo treino incrível para você.` +
+        ` 💪\nVamos começar? Digite "sim" ou "confirmo".`,
     },
-    '0': {
-      step: 'main_menu',
+    "0": {
+      step: "main_menu",
       question: mainMenu(),
     },
   };
@@ -187,8 +186,9 @@ export async function handleTrainingMenu(
   if (!choice) {
     const validOptions = Object.keys(mapping)
       .map((key) => `"${key}"`)
-      .join(', ');
-    return `Opção inválida, ${user.name}. Por favor, escolha uma das opções disponíveis: ${validOptions}.`;
+      .join(", ");
+    return `Opção inválida, ${user.name}. Por favor, ` +
+    `escolha uma das opções disponíveis: ${validOptions}.`;
   }
 
   await setSession(user.id, { step: choice.step });
@@ -199,29 +199,29 @@ export async function handleNutritionMenu(
   user: UserDoc,
   msg: string
 ): Promise<string> {
-  const option = msg.trim().match(/\d+/)?.[0] || '';
+  const option = msg.trim().match(/\d+/)?.[0] || "";
 
   const mapping: Record<string, { step: string; question: string }> = {
-    '1': {
-      step: 'see_daily_plan_confirm',
+    "1": {
+      step: "see_daily_plan_confirm",
       question:
         `Ok, ${user.name}! Vou buscar seu plano alimentar de hoje. 👍\n` +
         `Posso continuar? Digite "sim" para confirmar.`,
     },
-    '2': {
-      step: 'see_weekly_plan_confirm',
+    "2": {
+      step: "see_weekly_plan_confirm",
       question:
         `Certo! Preparando para exibir o plano da semana toda. 📅\n` +
         `Podemos prosseguir? Digite "sim" para confirmar.`,
     },
-    '3': {
-      step: 'see_substitutions_confirm',
+    "3": {
+      step: "see_substitutions_confirm",
       question:
         `Boa! Vou carregar a lista de substituições de alimentos. 🥦\n` +
         `Confirma? Digite "sim".`,
     },
-    '0': {
-      step: 'main_menu',
+    "0": {
+      step: "main_menu",
       question: mainMenu(),
     },
   };
@@ -232,8 +232,9 @@ export async function handleNutritionMenu(
   if (!choice) {
     const validOptions = Object.keys(mapping)
       .map((key) => `"${key}"`)
-      .join(', ');
-    return `Opção inválida, ${user.name}. Por favor, escolha uma das opções disponíveis: ${validOptions}.`;
+      .join(", ");
+    return `Opção inválida, ${user.name}.` +
+    `Por favor, escolha uma das opções disponíveis: ${validOptions}.`;
   }
 
   // Atualiza a sessão do usuário com o novo passo
@@ -247,5 +248,9 @@ export async function handleVirtualSpecialistMenu(
   user: UserDoc,
   msg: string
 ): Promise<string> {
-  return "Seção de Especialista Virtual em construção. Por favor, volte mais tarde.\n\n" + mainMenu();
+  return (
+    "Seção de Especialista Virtual em construção." +
+    'Por favor, volte mais tarde.\n\n' +
+    mainMenu()
+  );
 }
