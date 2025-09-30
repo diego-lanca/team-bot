@@ -7,7 +7,7 @@ const openai = new OpenAI({
   apiKey: env.OPENAI_KEY,
 });
 
-export const generateTrain = async (user: User): Promise<string> => {
+export const generateTrain = async (user: User): Promise<object> => {
   const response = await openai.responses.create({
     model: "gpt-5-nano",
     input: [
@@ -44,7 +44,7 @@ export const generateTrain = async (user: User): Promise<string> => {
     include: ["reasoning.encrypted_content"],
   });
 
-  return response.output_text;
+  return JSON.parse(response.output_text);
 };
 
 const generateUserPrompt = (user: User): string => {

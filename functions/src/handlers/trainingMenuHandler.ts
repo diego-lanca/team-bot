@@ -1,7 +1,12 @@
 import { UserDoc } from "../models/user";
 import { hasRequiredInfos } from "../services/userService";
-import { getUserTraining } from "../services/trainingPlanService";
+import {
+  getUserTraining,
+  setTrainingPlan,
+} from "../services/trainingPlanService";
 import { generateTrain } from "../services/openAiService";
+import { convertToTrainingPlan } from "../models/trainingPlan";
+import { setSession } from "../services/firestoreService";
 
 export function handleTrainingOptions(): Record<
   string,
@@ -43,5 +48,10 @@ export async function handleGenerateTrainings(
 
   const train = await generateTrain(user);
 
-  return train;
+  const trainingPlan = convertToTrainingPlan(train, user.id);
+
+  await setTrainingPlan(trainingPlan);
+  await setSession(user.id, { step: "training_menu" });
+
+  return "Treino criado com sucesso!";
 }

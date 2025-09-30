@@ -1,3 +1,5 @@
+import { Timestamp } from "firebase-admin/firestore";
+
 export interface TrainingPlan {
   userId: string;
   week: {
@@ -27,4 +29,40 @@ export interface Exercise {
   reps: string; // "8–12"
   restSeconds?: number; // 90
   notes?: string;
+}
+
+export function convertToTrainingPlan(json: any, userId: string): TrainingPlan {
+  const dayMap: Record<string, WeekDay> = {
+    "Segunda-feira": "monday",
+    "Terça-feira": "tuesday",
+    "Quarta-feira": "wednesday",
+    "Quinta-feira": "thursday",
+    "Sexta-feira": "friday",
+    "Sábado": "saturday",
+    "Domingo": "sunday",
+  };
+
+  const week: TrainingPlan["week"] = {};
+
+  for (const dia of json.plano_treino.dias) {
+    const key = dayMap[dia.dia];
+    if (!key) continue;
+
+    week[key] = {
+      name: dia.foco,
+      exercises: dia.exercicios.map((ex: any) => ({
+        name: ex.nome,
+        sets: ex.series,
+        reps: ex.repeticoes,
+        restSeconds: ex.descanso_seg,
+      })),
+    };
+  }
+
+  return {
+    userId,
+    week,
+    createdAt: Timestamp.now(),
+    updatedAt: Timestamp.now(),
+  };
 }

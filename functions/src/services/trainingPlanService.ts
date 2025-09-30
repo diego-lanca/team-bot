@@ -17,12 +17,12 @@ export async function getUserTraining(
 }
 
 export async function setTrainingPlan(
-  userData: Partial<TrainingPlan>,
-  docId: string | undefined
+  plan: Partial<TrainingPlan>,
+  docId?: string
 ): Promise<void> {
   if (!docId) {
     await trainingsRef.add({
-      ...userData,
+      ...plan,
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
     } as TrainingPlan);
@@ -31,7 +31,7 @@ export async function setTrainingPlan(
   }
 
   const trainingPlan = {
-    ...userData,
+    ...plan,
     updatedAt: Timestamp.now(),
   };
 
