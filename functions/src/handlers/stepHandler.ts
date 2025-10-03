@@ -6,6 +6,8 @@ import { setSession } from "../services/firestoreService";
 import { setUser } from "../services/userService";
 import { parseAge } from "../utils/utils";
 import { trainingMenu } from "../bot/flows/trainingMenu";
+import { virtualSpecialistMenu } from "../bot/flows/virtualSpecialistMenu";
+import { virtualSpecialistChat } from "./virtualSpecialistHandler";
 
 export async function handleName(user: UserDoc, msg: string): Promise<string> {
   const userName = msg.trim();
@@ -16,7 +18,7 @@ export async function handleName(user: UserDoc, msg: string): Promise<string> {
 
 export async function handleAge(user: UserDoc, msg: string): Promise<string> {
   const age = parseAge(msg);
-  if (age === null || age < 12 && age > 100) {
+  if (age === null || (age < 12 && age > 100)) {
     return "Por favor, digite um número válido para a sua idade.";
   }
 
@@ -37,15 +39,15 @@ export async function handleMenu(user: UserDoc, msg: string): Promise<string> {
       step: "training_menu",
       text: trainingMenu(),
     },
+    // "2": {
+    //   step: "nutrition_menu",
+    //   text: "Você escolheu: Plano Alimentar.",
+    // },
     "2": {
-      step: "nutrition_menu",
-      text: "Você escolheu: Plano Alimentar.",
+      step: "virtual_specialist_menu",
+      text: virtualSpecialistMenu(),
     },
     "3": {
-      step: "virtual_specialist_menu",
-      text: "Você escolheu: Falar com Especialista Virtual.",
-    },
-    "4": {
       step: "profile_menu",
       text: profileMenu(),
     },
@@ -156,7 +158,10 @@ export async function handleProfileMenu(
   return choice.question;
 }
 
-export async function handleEditName(user: UserDoc, msg: string): Promise<string> {
+export async function handleEditName(
+  user: UserDoc,
+  msg: string
+): Promise<string> {
   const newName = msg.trim();
 
   // Validação simples para não aceitar nomes vazios
@@ -168,13 +173,16 @@ export async function handleEditName(user: UserDoc, msg: string): Promise<string
   await setUser(user.id, { name: newName });
 
   // Importante: Reseta o passo para o menu de perfil
-  await setSession(user.id, { step: 'profile_menu' });
+  await setSession(user.id, { step: "profile_menu" });
 
   // Retorna uma mensagem de sucesso e o menu novamente
   return `✅ Nome atualizado para *${newName}*! Digite "0" para voltar ao menu principal.`;
 }
 
-export async function handleEditAge(user: UserDoc, msg: string): Promise<string> {
+export async function handleEditAge(
+  user: UserDoc,
+  msg: string
+): Promise<string> {
   const newAge = parseInt(msg.trim(), 10);
 
   // Valida se a idade é um número válido e está num intervalo razoável
@@ -186,12 +194,11 @@ export async function handleEditAge(user: UserDoc, msg: string): Promise<string>
   await setUser(user.id, { age: newAge });
 
   // Reseta o passo para o menu de perfil
-  await setSession(user.id, { step: 'profile_menu' });
+  await setSession(user.id, { step: "profile_menu" });
 
   // Retorna uma mensagem de sucesso e o menu novamente
   return `✅ Idade atualizada para *${newAge} anos*! Digite "0" para voltar ao menu principal.`;
 }
-
 
 export async function handleTrainingMenu(
   user: UserDoc,
@@ -224,67 +231,76 @@ export async function handleTrainingMenu(
     const validOptions = Object.keys(mapping)
       .map((key) => `"${key}"`)
       .join(", ");
-    return `Opção inválida, ${user.name}. Por favor, ` +
-    `escolha uma das opções disponíveis: ${validOptions}.`;
+    return (
+      `Opção inválida, ${user.name}. Por favor, ` +
+      `escolha uma das opções disponíveis: ${validOptions}.`
+    );
   }
 
   await setSession(user.id, { step: choice.step });
   return choice.question;
 }
 
-export async function handleNutritionMenu(
-  user: UserDoc,
-  msg: string
-): Promise<string> {
-  const option = msg.trim().match(/\d+/)?.[0] || "";
+// export async function handleNutritionMenu(
+//   user: UserDoc,
+//   msg: string
+// ): Promise<string> {
+//   const option = msg.trim().match(/\d+/)?.[0] || "";
 
-  const mapping: Record<string, { step: string; question: string }> = {
-    "1": {
-      step: "see_daily_plan_confirm",
-      question:
-        `Ok, ${user.name}! Vou buscar seu plano alimentar de hoje. 👍\n` +
-        `Posso continuar? Digite "sim" para confirmar.`,
-    },
-    "2": {
-      step: "see_weekly_plan_confirm",
-      question:
-        `Certo! Preparando para exibir o plano da semana toda. 📅\n` +
-        `Podemos prosseguir? Digite "sim" para confirmar.`,
-    },
-    "3": {
-      step: "see_substitutions_confirm",
-      question:
-        `Boa! Vou carregar a lista de substituições de alimentos. 🥦\n` +
-        `Confirma? Digite "sim".`,
-    },
-    "0": {
-      step: "main_menu",
-      question: mainMenu(),
-    },
-  };
+//   const mapping: Record<string, { step: string; question: string }> = {
+//     "1": {
+//       step: "see_daily_plan_confirm",
+//       question:
+//         `Ok, ${user.name}! Vou buscar seu plano alimentar de hoje. 👍\n` +
+//         `Posso continuar? Digite "sim" para confirmar.`,
+//     },
+//     "2": {
+//       step: "see_weekly_plan_confirm",
+//       question:
+//         `Certo! Preparando para exibir o plano da semana toda. 📅\n` +
+//         `Podemos prosseguir? Digite "sim" para confirmar.`,
+//     },
+//     "3": {
+//       step: "see_substitutions_confirm",
+//       question:
+//         `Boa! Vou carregar a lista de substituições de alimentos. 🥦\n` +
+//         `Confirma? Digite "sim".`,
+//     },
+//     "0": {
+//       step: "main_menu",
+//       question: mainMenu(),
+//     },
+//   };
 
-  const choice = mapping[option];
+//   const choice = mapping[option];
 
-  if (!choice) {
-    const validOptions = Object.keys(mapping)
-      .map((key) => `"${key}"`)
-      .join(", ");
-    return `Opção inválida, ${user.name}.` +
-    `Por favor, escolha uma das opções disponíveis: ${validOptions}.`;
-  }
+//   if (!choice) {
+//     const validOptions = Object.keys(mapping)
+//       .map((key) => `"${key}"`)
+//       .join(", ");
+//     return (
+//       `Opção inválida, ${user.name}.` +
+//       `Por favor, escolha uma das opções disponíveis: ${validOptions}.`
+//     );
+//   }
 
-  await setSession(user.id, { step: choice.step });
+//   await setSession(user.id, { step: choice.step });
 
-  return choice.question;
-}
+//   return choice.question;
+// }
 
 export async function handleVirtualSpecialistMenu(
   user: UserDoc,
   msg: string
 ): Promise<string> {
-  return (
-    "Seção de Especialista Virtual em construção." +
-    'Por favor, volte mais tarde.\n\n' +
-    mainMenu()
-  );
+  const command = parseInt(msg.trim());
+
+  if (command === 0) {
+    await setSession(user.id, { step: "main_menu" });
+    return mainMenu();
+  }
+
+  const response = await virtualSpecialistChat(user, msg);
+
+  return response;
 }

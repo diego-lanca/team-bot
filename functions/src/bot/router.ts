@@ -12,6 +12,7 @@ import {
   handleName,
   handleProfileMenu,
   handleTrainingMenu,
+  handleVirtualSpecialistMenu,
 } from "../handlers/stepHandler";
 import { handleProfileOptions } from "../handlers/profileMenuHandler";
 import { handleTrainingOptions } from "../handlers/trainingMenuHandler";
@@ -33,6 +34,7 @@ export async function route(user: UserDoc, msg: string): Promise<string> {
     main_menu: handleMenu,
     profile_menu: handleProfileMenu,
     training_menu: handleTrainingMenu,
+    virtual_specialist_menu: handleVirtualSpecialistMenu,
     edit_name: handleEditName,
     edit_age: handleEditAge,
     ...handleProfileOptions(),
@@ -48,8 +50,8 @@ export async function route(user: UserDoc, msg: string): Promise<string> {
     return greetings();
   }
 
-  if (msg.trim() === '0') {
-    await setSession(user.id, { step: 'main_menu' });
+  if (msg.trim() === "0") {
+    await setSession(user.id, { step: "main_menu" });
     return mainMenu();
   }
 
