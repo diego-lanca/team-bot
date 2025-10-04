@@ -123,7 +123,7 @@ export async function handleConditions(
   const medicalConditions = msg.split(",");
 
   if (medicalConditions.length === 0) {
-    return "Digite ao menos uma condição médica. (ex: Diabetes, Hipertensão)";
+    return "Digite ao menos uma condição médica. (ex: Diabetes, Hipertensão ou até mesmo Nenhuma)";
   }
 
   await setUser(user.id, { medicalConditions });
@@ -143,7 +143,7 @@ export async function handleInjuries(
   if (injuries.length === 0) {
     return (
       "Digite ao menos um membro lesionado: " +
-      "(ex: Ombro esquerdo, Mão direita)"
+      "(ex: Ombro esquerdo, Mão direita ou até mesmo Nenhuma)"
     );
   }
 
@@ -160,7 +160,7 @@ export async function handleMedications(
 
   if (medications.length === 0) {
     return (
-      "Digite ao menos uma medicação: " + "(ex: Insulina, Anti-inflamatório)"
+      "Digite ao menos uma medicação: " + "(ex: Insulina, Anti-inflamatório ou até mesmo Nenhuma)"
     );
   }
 

@@ -164,18 +164,14 @@ export async function handleEditName(
 ): Promise<string> {
   const newName = msg.trim();
 
-  // Validação simples para não aceitar nomes vazios
   if (!newName) {
     return "Nome inválido. Por favor, digite um nome válido.";
   }
 
-  // Atualiza o nome do usuário no banco de dados
   await setUser(user.id, { name: newName });
 
-  // Importante: Reseta o passo para o menu de perfil
   await setSession(user.id, { step: "profile_menu" });
 
-  // Retorna uma mensagem de sucesso e o menu novamente
   return `✅ Nome atualizado para *${newName}*! Digite "0" para voltar ao menu principal.`;
 }
 
@@ -185,18 +181,14 @@ export async function handleEditAge(
 ): Promise<string> {
   const newAge = parseInt(msg.trim(), 10);
 
-  // Valida se a idade é um número válido e está num intervalo razoável
   if (isNaN(newAge) || newAge < 10 || newAge > 100) {
     return "Idade inválida. Por favor, digite apenas números (ex: 30).";
   }
 
-  // Atualiza a idade no banco de dados
   await setUser(user.id, { age: newAge });
 
-  // Reseta o passo para o menu de perfil
   await setSession(user.id, { step: "profile_menu" });
 
-  // Retorna uma mensagem de sucesso e o menu novamente
   return `✅ Idade atualizada para *${newAge} anos*! Digite "0" para voltar ao menu principal.`;
 }
 
@@ -218,6 +210,12 @@ export async function handleTrainingMenu(
       question:
         `Perfeito! Estou pronto para criar um novo treino incrível para você.` +
         ` 💪\nVamos começar? Digite *"sim"* para continuar ou *"0"* para voltar.`,
+    },
+    "3": {
+      step: "see_weekly_training_confirm",
+      question:
+        `Certo! Preparando para exibir o treino da semana toda. 📅\n` +
+        `Posso continuar? Digite *"sim"* para confirmar ou *"0"* para voltar.`,
     },
     "0": {
       step: "main_menu",

@@ -18,6 +18,9 @@ export const chatWithVirtualSpecialist = async (
 ): Promise<string> => {
   const userTrain = (await getUserTraining(user.id)) ?? undefined;
 
+  // Corrigimos a chamada para generateChatPrompt
+  const promptText = generateChatPrompt(user, chatSession, msg, userTrain); // <-- MUDANÇA AQUI
+
   const response = await openai.responses.create({
     model: "gpt-5-nano",
     input: [
@@ -26,7 +29,7 @@ export const chatWithVirtualSpecialist = async (
         content: [
           {
             type: "input_text",
-            text: generateChatPrompt(user, chatSession, userTrain),
+            text: promptText, // Usamos a variável com o prompt corrigido
           },
         ],
       },
@@ -114,21 +117,24 @@ const generateUserPrompt = (user: User): string => {
 const generateChatPrompt = (
   user: User,
   chat: ChatSession,
+  msg: string, // <-- 1. Adicionamos o novo parâmetro aqui
   train?: TrainingPlan
 ): string => {
-  console.log(chat.chatHistoric);
+  // Construímos o histórico de forma explícita, adicionando a nova mensagem
+  const fullHistoric = `${chat?.chatHistoric || ''}\nUsuário: ${msg}`;
+
   return `# Você é um Personal Trainer Virtual
 
 Você conversa pelo WhatsApp ajudando com treinos, nutrição e hábitos saudáveis.
 
 # IMPORTANTE: Leia TODO o Histórico Antes de Responder
 
-Abaixo está o histórico COMPLETO da conversa. Leia TUDO antes de responder.
+Abaixo está o histórico COMPLETO da conversa, incluindo a última mensagem do usuário.
 
 ## Histórico da Conversa
 
 \`\`\`
-${chat?.chatHistoric}
+${fullHistoric} // <-- 2. Usamos o histórico completo com a nova mensagem
 \`\`\`
 
 # Informações do Usuário
@@ -165,16 +171,8 @@ Usuário: "Oi, tudo bem?"
 Você: "Oi! Tudo ótimo, e você? Como posso ajudar? 💪"
 
 **Situação 2 - Pergunta específica:**
-Usuário: "O que é leg press?"
-Você: "Leg press é um aparelho onde você empurra uma plataforma com as pernas, trabalhando principalmente coxas e glúteos. Você fica sentado/reclinado e estende as pernas contra o peso."
-
-**Situação 3 - Continuação (COM HISTÓRICO):**
-Histórico:
-- Usuário: "O que é leg press?"
-- Você: [explicou]
-- Usuário: "E como fazer?"
-
-Você: "Para fazer leg press: coloque os pés na plataforma na largura dos ombros, destrave o peso, desça controlado dobrando os joelhos até uns 90°, e empurre de volta estendendo as pernas. Não trave os joelhos no topo!"
+Usuário: "Qual o melhor exercício para peito superior?"
+Você: "Um dos melhores exercícios para o peito superior é o supino inclinado, seja com halteres ou com barra. Ele foca bem nessa porção do músculo."
 
 ## Regras:
 
