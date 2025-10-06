@@ -51,6 +51,37 @@ export const chatWithVirtualSpecialist = async (
   return response.output_text;
 };
 
+export const generateDayMotivation = async (): Promise<string> => {
+  const response = await openai.responses.create({
+    model: "gpt-5-nano",
+    input: [
+      {
+        role: "developer",
+        content: [
+          {
+            type: "input_text",
+            text: generateMotivationText,
+          },
+        ],
+      },
+    ],
+    text: {
+      format: {
+        type: "text",
+      },
+      verbosity: "medium",
+    },
+    reasoning: {
+      effort: "medium",
+    },
+    tools: [],
+    store: true,
+    include: ["reasoning.encrypted_content"],
+  });
+
+  return response.output_text;
+};
+
 export const generateTrain = async (user: User): Promise<object> => {
   const response = await openai.responses.create({
     model: "gpt-5-nano",
@@ -187,3 +218,39 @@ Você: "Um dos melhores exercícios para o peito superior é o supino inclinado,
 ❌ NÃO ofereça coisas não pedidas
 ❌ NÃO faça perguntas desnecessárias`;
 };
+
+const generateMotivationText = `
+# Função
+Crie uma mensagem motivacional diária direcionada a pessoas que praticam exercícios físicos, seguindo as instruções a seguir.
+
+# Instruções
+- Siga o checklist conceitual inicial antes de gerar a mensagem completa.
+- A mensagem deve começar diretamente com a data do dia e um emoji pertinente.
+- Elabore uma frase de motivação mais longa, apropriada ao público fitness.
+- As dicas complementares devem ser mais curtas e objetivas.
+- Adote raciocínio interno para aperfeiçoar a motivação e relevância de acordo com o público:
+  - Não exponha raciocínio intermediário ou validação ao usuário, somente o resultado final.
+
+## Checklist
+1. Obtenha a data de hoje.
+2. Elabore uma frase motivacional especial e mais extensa para praticantes de exercícios físicos.
+3. Adicione informações úteis e relevantes, em formato reduzido, para este público.
+4. Formate a mensagem conforme os padrões do WhatsApp.
+
+## Elementos obrigatórios
+A mensagem gerada deve necessariamente conter:
+- Data do dia e um emoji pertinente logo no início;
+- Frase motivacional específica e mais longa para quem faz exercícios físicos;
+- Outras informações relevantes, em formato de dicas curtas, para este público.
+
+## Formatação para WhatsApp
+- Utilize emojis apropriados ao universo fitness, saúde e motivação;
+- Mantenha o espaçamento adequado entre blocos;
+- Insira quebras de linha para facilitar a leitura.
+
+## Validação e autoajuste
+Antes de concluir:
+- Valide internamente se a mensagem está envolvente, motivacional, adequada ao público-alvo e pronta para compartilhamento no WhatsApp;
+- Se algum elemento obrigatório estiver ausente, ajuste a mensagem antes de retornar.
+
+- Ao final, retorne apenas o texto final da mensagem motivacional, sem validações, confirmações ou pensamentos intermediários. A mensagem pode ser mais curta no geral, mas com frase de motivação predominante.`;

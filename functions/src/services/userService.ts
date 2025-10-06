@@ -11,6 +11,7 @@ export async function fetchUser(phone: string): Promise<UserDoc> {
   // Se não encontrar, cria um novo
   const docRef = await usersRef.add({
     phone,
+    acceptedTerms: false,
     createdAt: Timestamp.now(),
     lastSeen: Timestamp.now(),
   });
@@ -18,9 +19,21 @@ export async function fetchUser(phone: string): Promise<UserDoc> {
   return {
     id: docRef.id,
     phone,
+    acceptedTerms: false,
     createdAt: Timestamp.now(),
     lastSeen: Timestamp.now(),
   };
+}
+
+export async function getUsersWithTermsAccepted(): Promise<UserDoc[]> {
+  const snapshot = await usersRef.where("acceptedTerms", "==", true).get();
+  if (snapshot.empty) return [];
+
+  const users = snapshot.docs.map((doc) => {
+    return { id: doc.id, ...(doc.data() as User) };
+  });
+
+  return users;
 }
 
 export async function getUserByPhone(phone: string): Promise<UserDoc | null> {

@@ -2,6 +2,7 @@ export interface User {
   // Dados pessoais
   name?: string;
   phone: string;
+  acceptedTerms: boolean;
   age?: number;
   sex?: string;
   createdAt: FirebaseFirestore.Timestamp;
