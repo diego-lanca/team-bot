@@ -5,17 +5,22 @@ import {
   setTrainingPlan,
 } from "../services/trainingPlanService";
 import { generateTrain } from "../services/openAiService";
-import { convertToTrainingPlan, WeekDay } from "../models/trainingPlan";
+import {
+  convertToTrainingPlan,
+  TrainingPlan,
+  WeekDay,
+} from "../models/trainingPlan";
 import { setSession } from "../services/firestoreService";
 import { trainingMenu } from "../bot/flows/trainingMenu";
 
 export function handleTrainingOptions(): Record<
   string,
   (user: UserDoc, msg: string) => Promise<string>
-  > {
+> {
   return {
     see_training_confirm: handleSeeTraining,
     generate_training_confirm: handleGenerateTrainings,
+    see_weekly_training_confirm: handleSeeWeeklyTraining,
   };
 }
 
@@ -34,12 +39,17 @@ export async function handleSeeTraining(
 
   if (!training) {
     await setSession(user.id, { step: "training_menu" });
-    return (
-      "Você ainda não tem nenhum treino programado! " +
-      "Digite *0* para voltar ao menu de treinos."
-    );
+    return "Você ainda não tem nenhum treino programado!\n" + trainingMenu();
   }
 
+  const trainingText = getUserTodayTrain(training);
+
+  await setSession(user.id, { step: "training_menu" });
+
+  return `${trainingText}\n\nO que deseja fazer agora?\n` + trainingMenu();
+}
+
+export function getUserTodayTrain(training: TrainingPlan): string {
   const today = new Date();
   const weekDay = today.getDay(); // 0=domingo ... 6=sábado
 
@@ -58,11 +68,7 @@ export async function handleSeeTraining(
   const dayTraining = training.week[dayInfo.key];
 
   if (!dayTraining) {
-    await setSession(user.id, { step: "training_menu" });
-    return (
-      `Não há treino programado para ${dayInfo.label}.\n\n` +
-      "Digite *0* para voltar ao menu de treinos."
-    );
+    return `Não há treino programado para ${dayInfo.label}.`;
   }
 
   // Monta texto formatado
@@ -86,12 +92,7 @@ export async function handleSeeTraining(
     trainingText += "   Nenhum exercício cadastrado.\n";
   }
 
-  await setSession(user.id, { step: "training_menu" });
-
-  return (
-    `${trainingText}\n\nO que deseja fazer agora?\n` +
-    "Digite *0* para voltar ao menu de treinos."
-  );
+  return trainingText;
 }
 
 export async function handleGenerateTrainings(
@@ -147,27 +148,31 @@ export async function handleSeeWeeklyTraining(
 
   if (!training) {
     await setSession(user.id, { step: "training_menu" });
-    return (
-      "Você ainda não tem nenhum treino programado! " +
-      "Digite *0* para voltar ao menu de treinos."
-    );
+    return "Você ainda não tem nenhum treino programado!\n\n" + trainingMenu();
   }
 
   const weekTraining = training.week;
 
   if (!weekTraining) {
     await setSession(user.id, { step: "training_menu" });
-    return (
-      "Não há treino programado para esta semana.\n\n" +
-      "Digite *0* para voltar ao menu de treinos."
-    );
+    return "Não há treino programado para esta semana.\n\n" + trainingMenu();
   }
 
   // Monta texto formatado
   let trainingText = `📅 *Treino da Semana*\n`;
 
   for (const [day, dayTraining] of Object.entries(weekTraining)) {
-    trainingText += `📌 ${day}: ${dayTraining.name}\n`;
+    const daysMap: Record<string, string> = {
+      sunday: "Domingo",
+      monday: "Segunda-feira",
+      tuesday: "Terça-feira",
+      wednesday: "Quarta-feira",
+      thursday: "Quinta-feira",
+      friday: "Sexta-feira",
+      saturday: "Sábado",
+    };
+
+    trainingText += `📌 ${day}: ${daysMap[dayTraining.name]}\n`;
 
     if (dayTraining.exercises.length > 0) {
       trainingText += "🏋️ *Exercícios*:\n";
@@ -189,8 +194,5 @@ export async function handleSeeWeeklyTraining(
 
   await setSession(user.id, { step: "training_menu" });
 
-  return (
-    `${trainingText}\n\nO que deseja fazer agora?\n` +
-    "Digite *0* para voltar ao menu de treinos."
-  );
+  return `${trainingText}\n\nO que deseja fazer agora?\n` + trainingMenu();
 }

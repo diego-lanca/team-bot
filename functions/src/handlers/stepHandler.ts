@@ -73,31 +73,33 @@ export async function handleProfileMenu(
   const mapping: Record<string, { step: string; question: string }> = {
     "1": {
       step: "edit_name",
-      question: `📝 Nome atual: ${user.name ?? "—"}\nDigite o novo nome:`,
+      question: `📝 Nome atual: ${
+        user.name ?? "—"
+      }\nDigite o novo nome ou *0* pra cancelar:`,
     },
     "2": {
       step: "edit_age",
       question: `${
         user.age ? `🎂 Idade atual: ${user.age}\n` : ""
-      }Digite sua idade:`,
+      }Digite sua idade ou *0* pra cancelar:`,
     },
     "3": {
       step: "edit_sex",
       question: `${
         user.sex ? `⚧ Sexo atual: ${user.sex}\n` : ""
-      }Digite *M* para Masculino ou *F* para Feminino:`,
+      }Digite *M* para Masculino, *F* para Feminino ou *0* pra cancelar :`,
     },
     "4": {
       step: "edit_height",
       question: `${
         user.height ? `📏 Altura atual: ${user.height} m\n` : ""
-      }Digite sua altura em metros (ex: 1.75):`,
+      }Digite sua altura em metros (ex: 1.75) ou *0* pra cancelar:`,
     },
     "5": {
       step: "edit_weight",
       question: `${
         user.weight ? `⚖️ Peso atual: ${user.weight} kg\n` : ""
-      }Digite seu peso em kg (ex: 70):`,
+      }Digite seu peso em kg (ex: 70) ou *0* pra cancelar:`,
     },
     "6": {
       step: "edit_bodyfat",
@@ -105,14 +107,14 @@ export async function handleProfileMenu(
         user.bodyFatPercentage
           ? `💪 Gordura corporal atual: ${user.bodyFatPercentage}%\n`
           : ""
-      }Digite sua % de gordura corporal:`,
+      }Digite sua % de gordura corporal ou *0* pra cancelar:`,
     },
     "7": {
       step: "edit_goal",
       question:
         `${
           user.goal ? `🎯 Meta atual: ${user.goal}\n` : ""
-        }Escolha sua meta:\n1️⃣ Perda de peso\n2️⃣ Ganho de massa\n` +
+        }Escolha sua meta:\n0️⃣ Cancelar\n1️⃣ Perda de peso\n2️⃣ Ganho de massa\n` +
         "3️⃣ Resistência\n4️⃣ Saúde geral",
     },
     "8": {
@@ -122,7 +124,7 @@ export async function handleProfileMenu(
           user.activityLevel
             ? `🏃‍♂️ Nível de atividade atual: ${user.activityLevel}\n`
             : ""
-        }Escolha seu nível de atividade:\n1️⃣ Sedentário\n2️⃣ Leve\n` +
+        }Escolha seu nível de atividade:\n0️⃣ Cancelar\n1️⃣ Sedentário\n2️⃣ Leve\n` +
         "3️⃣ Moderado\n4️⃣ Intenso",
     },
     "9": {
@@ -131,19 +133,19 @@ export async function handleProfileMenu(
         user.medicalConditions
           ? `🩺 Condições médicas atuais: ${user.medicalConditions}\n`
           : ""
-      }Liste condições médicas relevantes: (ex: Diabetes, Hipertensão)`,
+      }Liste condições médicas relevantes: (ex: Diabetes, Hipertensão) ou *0* pra cancelar`,
     },
     "10": {
       step: "edit_injuries",
       question: `${
         user.injuries ? `🤕 Lesões registradas: ${user.injuries}\n` : ""
-      }Informe lesões atuais ou anteriores: (ex: Ombro esquerdo, Mão direita)`,
+      }Informe lesões atuais ou anteriores: (ex: Ombro esquerdo, Mão direita) ou *0* pra cancelar`,
     },
     "11": {
       step: "edit_medications",
       question: `${
         user.medications ? `💊 Medicamentos em uso: ${user.medications}\n` : ""
-      }Liste medicamentos em uso:`,
+      }Liste medicamentos em uso ou *0* pra cancelar:`,
     },
     "0": {
       step: "main_menu",
@@ -162,6 +164,11 @@ export async function handleEditName(
   user: UserDoc,
   msg: string
 ): Promise<string> {
+  if (msg.trim() == "0") {
+    await setSession(user.id, { step: "profile_menu" });
+    return profileMenu();
+  }
+
   const newName = msg.trim();
 
   if (!newName) {
@@ -179,6 +186,11 @@ export async function handleEditAge(
   user: UserDoc,
   msg: string
 ): Promise<string> {
+  if (msg.trim() == "0") {
+    await setSession(user.id, { step: "profile_menu" });
+    return profileMenu();
+  }
+
   const newAge = parseInt(msg.trim(), 10);
 
   if (isNaN(newAge) || newAge < 10 || newAge > 100) {

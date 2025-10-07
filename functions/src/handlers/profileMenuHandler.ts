@@ -6,7 +6,7 @@ import { setUser } from "../services/userService";
 export function handleProfileOptions(): Record<
   string,
   (user: UserDoc, msg: string) => Promise<string>
-  > {
+> {
   return {
     edit_sex: handleSex,
     edit_height: handleHeight,
@@ -21,6 +21,11 @@ export function handleProfileOptions(): Record<
 }
 
 export async function handleSex(user: UserDoc, msg: string): Promise<string> {
+  if (msg.trim() == "0") {
+    await setSession(user.id, { step: "profile_menu" });
+    return profileMenu();
+  }
+
   const sex = msg.trim().toUpperCase();
   if (!["M", "F"].includes(sex)) {
     return "Por favor, digite M para Masculino ou F para Feminino.";
@@ -38,6 +43,11 @@ export async function handleHeight(
   user: UserDoc,
   msg: string
 ): Promise<string> {
+  if (msg.trim() == "0") {
+    await setSession(user.id, { step: "profile_menu" });
+    return profileMenu();
+  }
+
   const height = parseFloat(msg.replace(",", "."));
   if (isNaN(height)) return "Digite sua altura em metros. Ex: 1.75";
   await setUser(user.id, { height });
@@ -49,6 +59,11 @@ export async function handleWeight(
   user: UserDoc,
   msg: string
 ): Promise<string> {
+  if (msg.trim() == "0") {
+    await setSession(user.id, { step: "profile_menu" });
+    return profileMenu();
+  }
+
   const weight = parseFloat(msg.replace(",", "."));
   if (isNaN(weight)) return "Digite seu peso em kg. Ex: 70";
   await setUser(user.id, { weight });
@@ -60,6 +75,10 @@ export async function handleBodyFat(
   user: UserDoc,
   msg: string
 ): Promise<string> {
+  if (msg.trim() == "0") {
+    await setSession(user.id, { step: "profile_menu" });
+    return profileMenu();
+  }
   const bodyFatPercentage = parseFloat(msg.replace(",", ".").replace("%", ""));
   if (isNaN(bodyFatPercentage)) {
     return "Digite sua gordura corporal em porcentagem. Ex: 82.1";
@@ -74,6 +93,11 @@ export async function handleBodyFat(
 }
 
 export async function handleGoal(user: UserDoc, msg: string): Promise<string> {
+  if (msg.trim() == "0") {
+    await setSession(user.id, { step: "profile_menu" });
+    return profileMenu();
+  }
+
   const goal = parseInt(msg);
 
   const goalMap: Record<number, string> = {
@@ -96,6 +120,11 @@ export async function handleActivityLevel(
   user: UserDoc,
   msg: string
 ): Promise<string> {
+  if (msg.trim() == "0") {
+    await setSession(user.id, { step: "profile_menu" });
+    return profileMenu();
+  }
+
   const activityLevel = parseInt(msg);
 
   const activityMap: Record<number, string> = {
@@ -120,6 +149,10 @@ export async function handleConditions(
   user: UserDoc,
   msg: string
 ): Promise<string> {
+  if (msg.trim() == "0") {
+    await setSession(user.id, { step: "profile_menu" });
+    return profileMenu();
+  }
   const medicalConditions = msg.split(",");
 
   if (medicalConditions.length === 0) {
@@ -138,6 +171,10 @@ export async function handleInjuries(
   user: UserDoc,
   msg: string
 ): Promise<string> {
+  if (msg.trim() == "0") {
+    await setSession(user.id, { step: "profile_menu" });
+    return profileMenu();
+  }
   const injuries = msg.split(",");
 
   if (injuries.length === 0) {
@@ -156,11 +193,16 @@ export async function handleMedications(
   user: UserDoc,
   msg: string
 ): Promise<string> {
+  if (msg.trim() == "0") {
+    await setSession(user.id, { step: "profile_menu" });
+    return profileMenu();
+  }
   const medications = msg.split(",");
 
   if (medications.length === 0) {
     return (
-      "Digite ao menos uma medicação: " + "(ex: Insulina, Anti-inflamatório ou até mesmo Nenhuma)"
+      "Digite ao menos uma medicação: " +
+      "(ex: Insulina, Anti-inflamatório ou até mesmo Nenhuma)"
     );
   }
 
@@ -180,5 +222,5 @@ export async function handleProfileBack(
   if (msg) {
     await setSession(user.id, { step: "main_menu" });
   }
-  return '';
+  return "";
 }

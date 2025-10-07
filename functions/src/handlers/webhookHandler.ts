@@ -7,6 +7,8 @@ import { generateDayMotivation } from "../services/openAiService";
 import { UserDoc } from "../models/user";
 import { sendMessage } from "../services/twilioService";
 import PromisePool from "@supercharge/promise-pool";
+import { getUserTraining } from "../services/trainingPlanService";
+import { getUserTodayTrain } from "./trainingMenuHandler";
 // import { sendMessage } from "../services/twilioService";
 
 // Função onMessage
@@ -40,7 +42,12 @@ export const generateAndSendDayMotivation = onSchedule(
     await PromisePool.withConcurrency(3)
       .for(users)
       .process(async (user) => {
-        await sendMessage(user.phone, dayMotivation);
+        let message = dayMotivation + "\n";
+
+        const training = await getUserTraining(user.id);
+        if (training) message += getUserTodayTrain(training);
+
+        await sendMessage(user.phone, message);
       });
 
     console.log("Day motivation sended");
