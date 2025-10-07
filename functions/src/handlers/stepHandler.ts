@@ -114,8 +114,8 @@ export async function handleProfileMenu(
       question:
         `${
           user.goal ? `🎯 Meta atual: ${user.goal}\n` : ""
-        }Escolha sua meta:\n0️⃣ Cancelar\n1️⃣ Perda de peso\n2️⃣ Ganho de massa\n` +
-        "3️⃣ Resistência\n4️⃣ Saúde geral",
+        }Escolha sua meta:\n0️⃣ Cancelar\n1️⃣ Perda de peso\n` +
+        "2️⃣ Ganho de massa\n3️⃣ Resistência\n4️⃣ Saúde geral",
     },
     "8": {
       step: "edit_activity",
@@ -124,8 +124,8 @@ export async function handleProfileMenu(
           user.activityLevel
             ? `🏃‍♂️ Nível de atividade atual: ${user.activityLevel}\n`
             : ""
-        }Escolha seu nível de atividade:\n0️⃣ Cancelar\n1️⃣ Sedentário\n2️⃣ Leve\n` +
-        "3️⃣ Moderado\n4️⃣ Intenso",
+        }Escolha seu nível de atividade:\n0️⃣ Cancelar\n` +
+        "1️⃣ Sedentário\n2️⃣ Leve\n3️⃣ Moderado\n4️⃣ Intenso",
     },
     "9": {
       step: "edit_conditions",
@@ -133,13 +133,15 @@ export async function handleProfileMenu(
         user.medicalConditions
           ? `🩺 Condições médicas atuais: ${user.medicalConditions}\n`
           : ""
-      }Liste condições médicas relevantes: (ex: Diabetes, Hipertensão) ou *0* pra cancelar`,
+      }Liste condições médicas relevantes: ` +
+      '(ex: Diabetes, Hipertensão) ou *0* pra cancelar',
     },
     "10": {
       step: "edit_injuries",
       question: `${
         user.injuries ? `🤕 Lesões registradas: ${user.injuries}\n` : ""
-      }Informe lesões atuais ou anteriores: (ex: Ombro esquerdo, Mão direita) ou *0* pra cancelar`,
+      }Informe lesões atuais ou anteriores: ` +
+      '(ex: Ombro esquerdo, Mão direita) ou *0* pra cancelar',
     },
     "11": {
       step: "edit_medications",
@@ -179,7 +181,8 @@ export async function handleEditName(
 
   await setSession(user.id, { step: "profile_menu" });
 
-  return `✅ Nome atualizado para *${newName}*! Digite "0" para voltar ao menu principal.`;
+  return `✅ Nome atualizado para *${newName}*! ` +
+  'Digite "0" para voltar ao menu principal.';
 }
 
 export async function handleEditAge(
@@ -201,7 +204,8 @@ export async function handleEditAge(
 
   await setSession(user.id, { step: "profile_menu" });
 
-  return `✅ Idade atualizada para *${newAge} anos*! Digite "0" para voltar ao menu principal.`;
+  return `✅ Idade atualizada para *${newAge} anos*! ` +
+  'Digite "0" para voltar ao menu principal.';
 }
 
 export async function handleTrainingMenu(
@@ -221,7 +225,8 @@ export async function handleTrainingMenu(
       step: "generate_training_confirm",
       question:
         `Perfeito! Estou pronto para criar um novo treino incrível para você.` +
-        ` 💪\nVamos começar? Digite *"sim"* para continuar ou *"0"* para voltar.`,
+        ` 💪\nVamos começar? Digite *"sim"* para continuar ` +
+        'ou *"0"* para voltar.',
     },
     "3": {
       step: "see_weekly_training_confirm",

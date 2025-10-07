@@ -31,6 +31,7 @@ export interface Exercise {
   notes?: string;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function convertToTrainingPlan(json: any, userId: string): TrainingPlan {
   const dayMap: Record<string, WeekDay> = {
     "Segunda-feira": "monday",
@@ -50,6 +51,7 @@ export function convertToTrainingPlan(json: any, userId: string): TrainingPlan {
 
     week[key] = {
       name: dia.foco,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       exercises: dia.exercicios.map((ex: any) => ({
         name: ex.nome,
         sets: ex.series,

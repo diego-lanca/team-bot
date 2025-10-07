@@ -6,7 +6,7 @@ import { setUser } from "../services/userService";
 export function handleProfileOptions(): Record<
   string,
   (user: UserDoc, msg: string) => Promise<string>
-> {
+  > {
   return {
     edit_sex: handleSex,
     edit_height: handleHeight,
@@ -156,7 +156,10 @@ export async function handleConditions(
   const medicalConditions = msg.split(",");
 
   if (medicalConditions.length === 0) {
-    return "Digite ao menos uma condição médica. (ex: Diabetes, Hipertensão ou até mesmo Nenhuma)";
+    return (
+      "Digite ao menos uma condição médica. " +
+      "(ex: Diabetes, Hipertensão ou até mesmo Nenhuma)"
+    );
   }
 
   await setUser(user.id, { medicalConditions });

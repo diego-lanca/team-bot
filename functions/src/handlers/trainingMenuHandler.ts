@@ -16,7 +16,7 @@ import { trainingMenu } from "../bot/flows/trainingMenu";
 export function handleTrainingOptions(): Record<
   string,
   (user: UserDoc, msg: string) => Promise<string>
-> {
+  > {
   return {
     see_training_confirm: handleSeeTraining,
     generate_training_confirm: handleGenerateTrainings,

@@ -55,5 +55,8 @@ export async function route(user: UserDoc, msg: string): Promise<string> {
     return mainMenu();
   }
 
-  return 'Desculpa, não entendi. Digite "0" para voltar ao menu principal ou "ajuda" para ver as opções.';
+  return (
+    'Desculpa, não entendi. Digite "0" para voltar ao ' +
+    'menu principal ou "ajuda" para ver as opções.'
+  );
 }
