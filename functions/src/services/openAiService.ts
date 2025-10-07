@@ -19,7 +19,7 @@ export const chatWithVirtualSpecialist = async (
   const userTrain = (await getUserTraining(user.id)) ?? undefined;
 
   // Corrigimos a chamada para generateChatPrompt
-  const promptText = generateChatPrompt(user, chatSession, msg, userTrain); // <-- MUDANÇA AQUI
+  const promptText = generateChatPrompt(user, chatSession, msg, userTrain); 
 
   const response = await openai.responses.create({
     model: "gpt-5-nano",
@@ -29,7 +29,7 @@ export const chatWithVirtualSpecialist = async (
         content: [
           {
             type: "input_text",
-            text: promptText, // Usamos a variável com o prompt corrigido
+            text: promptText,
           },
         ],
       },
@@ -124,25 +124,92 @@ export const generateTrain = async (user: User): Promise<object> => {
 
 const generateUserPrompt = (user: User): string => {
   if (!user.weight || !user.height) {
-    return "";
+    throw new Error("Peso e altura são obrigatórios para gerar o treino.");
   }
 
   const imc = (user.weight / (user.height * user.height)).toFixed(2);
 
-  return (
-    "Gerar treino para:\n" +
-    `Idade: ${user.age}\n` +
-    `Sexo: ${user.sex}\n` +
-    `Altura: ${user.height}m\n` +
-    `Peso: ${user.weight}kg\n` +
-    `IMC: ${imc}\n` +
-    (user.bodyFatPercentage
-      ? `Gordura corporal: ${user.bodyFatPercentage}%\n`
-      : "") +
-    `Objetivo: ${user.goal}\n` +
-    `Nível de atividade: ${user.activityLevel}\n` +
-    `Dias por semana: ${5}`
-  );
+  return `
+---
+**PAPEL E OBJETIVO:**
+Você é um Personal Trainer especialista em fisiologia do exercício e adaptação de treinos. Sua tarefa é criar um plano de treino em formato JSON, seguro e eficaz, com base nas informações do usuário e seguindo TODAS as regras estritamente.
+
+---
+**PERFIL DO USUÁRIO:**
+- **Idade:** ${user.age} anos
+- **Sexo:** ${user.sex}
+- **Altura:** ${user.height}m
+- **Peso:** ${user.weight}kg
+- **IMC:** ${imc}
+- **Percentual de Gordura:** ${user.bodyFatPercentage ? `${user.bodyFatPercentage}%` : "Nenhuma"}
+- **Objetivo Principal:** ${user.goal || "Nenhuma"}
+- **Nível de Atividade:** ${user.activityLevel || "Nenhuma"}
+- **FREQUÊNCIA SEMANAL DESEJADA:** ${user.trainingDaysPerWeek} dias
+
+---
+**REGRAS E RESTRIÇÕES PARA O TREINO (INSTRUÇÕES CRÍTICAS):**
+${
+  user.injuries && user.injuries.length > 0
+    ? `- **LESÕES:** O usuário relatou as seguintes lesões: **${user.injuries.join(
+        ", "
+      )}**.
+  - **AÇÃO OBRIGATÓRIA:** Adapte o treino para EVITAR COMPLETAMENTE qualquer exercício que cause dor, pressão ou estresse direto nessas áreas. Ofereça exercícios alternativos e seguros que fortaleçam a musculatura de suporte ao redor da lesão, se aplicável.`
+    : "- **LESÕES:** Nenhuma lesão informada."
+}
+${
+  user.medicalConditions && user.medicalConditions.length > 0
+    ? `- **CONDIÇÕES MÉDICAS:** O usuário tem as seguintes condições: **${user.medicalConditions.join(
+        ", "
+      )}**.
+  - **AÇÃO OBRIGATÓRIA:** A intensidade, volume e tipo de exercício devem ser apropriados para estas condições. Por exemplo, para hipertensão, evite manobras de valsalva (prender a respiração) e picos de alta intensidade. Para diabetes, priorize exercícios de intensidade moderada e consistente.`
+    : "- **CONDIÇÕES MÉDICAS:** Nenhuma condição informada."
+}
+${
+  user.medications && user.medications.length > 0
+    ? `- **MEDICAMENTOS:** O usuário utiliza: **${user.medications.join(
+        ", "
+      )}**.
+  - **AÇÃO DE ATENÇÃO:** Apenas considere que certos medicamentos podem influenciar a performance ou mascarar a dor. Inclua um aviso genérico para o usuário treinar com cautela.`
+    : "- **MEDICAMENTOS:** Nenhum medicamento informado."
+}
+
+---
+**FORMATO DE SAÍDA (JSON):**
+O plano de treino DEVE ser um objeto JSON. A estrutura deve ser a seguinte:
+{
+  "planoDeTreino": {
+    "nomePlano": "Treino para ${user.goal}",
+    "observacaoImportante": "Lembre-se de consultar um médico antes de iniciar. Este treino foi adaptado às suas condições, mas a percepção de dor é um sinal para parar.",
+    "diasDeTreino": [
+      {
+        "dia": "A",
+        "grupoMuscular": "Peito, Ombros e Tríceps",
+        "exercicios": [
+          { "nome": "Supino Reto com Halteres", "series": "3", "repeticoes": "10-12" },
+          { "nome": "Desenvolvimento com Halteres", "series": "3", "repeticoes": "10-12" }
+        ]
+      },
+      {
+        "dia": "B",
+        "grupoMuscular": "Costas e Bíceps",
+        "exercicios": [
+          { "nome": "Remada Curvada", "series": "3", "repeticoes": "10-12" },
+          { "nome": "Rosca Direta", "series": "3", "repeticoes": "10-12" }
+        ]
+      },
+      {
+        "dia": "C",
+        "grupoMuscular": "Pernas e Abdômen",
+        "exercicios": [
+          { "nome": "Agachamento Livre", "series": "3", "repeticoes": "10-12" },
+          { "nome": "Prancha", "series": "3", "repeticoes": "30 segundos" }
+        ]
+      }
+    ]
+  }
+}
+---
+`;
 };
 
 const generateChatPrompt = (
@@ -180,6 +247,9 @@ ${fullHistoric} // <-- 2. Usamos o histórico completo com a nova mensagem
     "gordura_corporal_percent": ${user.bodyFatPercentage},
     "objetivo": ${user.goal},
     "nivel_atividade": ${user.activityLevel}
+    "condicoes_medicas": ${user.medicalConditions || []},
+    "lesoes": ${user.injuries || []},
+    "medicamentos": ${user.medications || [] }
   },
   "plano_treino": {
     "dias_por_semana": ${5},

@@ -222,11 +222,11 @@ export async function handleTrainingMenu(
         `Digite *"sim"* para continuar ou *"0"* para voltar.`,
     },
     "2": {
-      step: "generate_training_confirm",
+      step: "ask_training_days", 
       question:
-        `Perfeito! Estou pronto para criar um novo treino incrível para você.` +
-        ` 💪\nVamos começar? Digite *"sim"* para continuar ` +
-        'ou *"0"* para voltar.',
+        `Legal! Para criar um treino perfeito para você, me diga: ` +
+        `*quantos dias na semana você pretende treinar?* 🤔\n\n` +
+        `Por favor, digite um número de 1 a 7. (ou "0" para voltar)`, 
     },
     "3": {
       step: "see_weekly_training_confirm",
@@ -254,6 +254,38 @@ export async function handleTrainingMenu(
 
   await setSession(user.id, { step: choice.step });
   return choice.question;
+}
+
+export async function handleTrainingDays(
+  user: UserDoc,
+  msg: string
+): Promise<string> {
+  const days = parseInt(msg.trim(), 10);
+
+  if (msg.trim() === "0") {
+    await setSession(user.id, { step: "training_menu" });
+    return trainingMenu();
+  }
+
+  if (isNaN(days) || days < 1 || days > 7) {
+    return (
+      "❌ Ops! Parece que você não digitou um número válido. " +
+      "Por favor, informe um número de 1 a 7.\n\n" +
+      'Ou digite "0" para voltar.'
+    );
+  }
+
+  // Salva a informação no perfil do usuário
+  // É importante que o campo 'trainingDaysPerWeek' exista no seu tipo UserDoc
+  await setUser(user.id, { trainingDaysPerWeek: days });
+
+  // Agora, avançamos para a confirmação final
+  await setSession(user.id, { step: "generate_training_confirm" });
+
+  return (
+    `✅ Perfeito, ${days} dias por semana! Estou pronto para criar seu novo treino.\n\n` +
+    `Digite *"sim"* para confirmar ou *"0"* para voltar.`
+  );
 }
 
 // export async function handleNutritionMenu(
