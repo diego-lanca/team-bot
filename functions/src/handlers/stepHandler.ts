@@ -11,6 +11,15 @@ import { virtualSpecialistChat } from "./virtualSpecialistHandler";
 
 export async function handleName(user: UserDoc, msg: string): Promise<string> {
   const userName = msg.trim();
+
+  // Verificamos se o nome não é muito curto, muito longo ou composto apenas por números.
+  if (userName.length < 2 || userName.length > 50 || /^\d+$/.test(userName)) {
+    return (
+      "Hmm, esse nome não parece válido. 🤔\n" +
+      "Por favor, digite um nome real para que a gente possa se conhecer melhor."
+    );
+  }
+  
   await setUser(user.id, { name: userName });
   await setSession(user.id, { step: "ask_age" });
   return askAge({ ...user, name: userName });
