@@ -11,5 +11,6 @@ export interface ChatSession {
 export interface ChatMessage {
   role: "user" | "assistant"; // quem enviou a mensagem
   content: string; // texto da mensagem
+  format: string;
   timestamp: Timestamp; // opcional: unix timestamp da mensagem
 }

@@ -15,23 +15,11 @@ const openai = new OpenAI({
 export const chatWithVirtualSpecialist = async (
   user: UserDoc,
   msg: string,
-  chatSession: ChatSession,
-  media?: string,
-  contentType?: string
+  chatSession: ChatSession
 ): Promise<string> => {
   const userTrain = (await getUserTraining(user.id)) ?? undefined;
 
-  console.log(media);
-  console.log(contentType);
-
-  const userPrompt = await getUserMsg(msg, media, contentType);
-
-  const promptText = generateChatPrompt(
-    user,
-    chatSession,
-    userPrompt,
-    userTrain
-  );
+  const promptText = generateChatPrompt(user, chatSession, msg, userTrain);
 
   const response = await openai.responses.create({
     model: "gpt-5-nano",
@@ -63,7 +51,7 @@ export const chatWithVirtualSpecialist = async (
   return response.output_text;
 };
 
-const getUserMsg = async (
+export const getUserMessage = async (
   msg: string,
   media?: string,
   contentType?: string
@@ -71,7 +59,7 @@ const getUserMsg = async (
   if (contentType === "audio/ogg" && media) {
     // Baixar áudio do Twilio
     const response = await axios.get(media, {
-      responseType: "stream",
+      responseType: "arraybuffer",
       auth: {
         username: env.TWILIO_SID,
         password: env.TWILIO_AUTH,
@@ -82,10 +70,12 @@ const getUserMsg = async (
       throw new Error(`Falha ao baixar áudio do Twilio: ${response.status}`);
     }
 
-    console.log(response.data['buffer']);
+    const buffer = Buffer.from(response.data);
+
+    const file = new File([buffer], "audio.ogg", { type: contentType });
 
     const transcription = await openai.audio.transcriptions.create({
-      file: response.data,
+      file: file,
       model: "gpt-4o-mini-transcribe",
       language: "pt",
     });
