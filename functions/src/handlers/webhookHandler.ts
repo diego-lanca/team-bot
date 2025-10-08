@@ -13,9 +13,10 @@ import { getUserTodayTrain } from "./trainingMenuHandler";
 
 // Função onMessage
 export const onMessage = onRequest(
-  { timeoutSeconds: 1200 },
+  { timeoutSeconds: 1200, region: 'southamerica-east1' },
   async (req, res): Promise<void> => {
     if (req.method !== "POST") {
+      console.log('Invalid method:', req.method);
       res.status(405).send("Only POST");
       return;
     }
@@ -23,17 +24,28 @@ export const onMessage = onRequest(
     const userMessage = (req.body.Body ?? "") as string;
     const userPhone = (req.body.From ?? "") as string;
 
-    const user = await fetchUser(userPhone);
+    try {
+      const user = await fetchUser(userPhone);
 
-    const reply = await route(user, userMessage);
-    // await sendMessage(userPhone, reply);
+      const reply = await route(user, userMessage);
 
-    res.status(200).send(reply);
+      await sendMessage(userPhone, reply);
+
+      res.status(200).send(reply);
+    } catch (err) {
+      console.error('Error processing message:', err);
+      res.status(500).send('Internal Server Error');
+    }
   }
 );
 
+
 export const generateAndSendDayMotivation = onSchedule(
-  "every day 06:00",
+  {
+    region: "southamerica-east1",
+    schedule: "every day 06:00", // ou "0 3 * * *" (CRON padrão)
+    timeZone: "America/Sao_Paulo",
+  },
   async () => {
     const dayMotivation: string = await generateDayMotivation();
 
