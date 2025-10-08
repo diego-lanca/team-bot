@@ -2,9 +2,9 @@
 import { differenceInDays } from "date-fns";
 import { UserDoc } from "../models/user";
 import { getSession, setSession } from "../services/firestoreService";
-import { greetings } from "./flows/greetings";
 import { welcome } from "./flows/welcome";
 import {
+  handleAcceptTerms,
   handleAge,
   handleEditAge,
   handleEditName,
@@ -18,7 +18,12 @@ import { handleProfileOptions } from "../handlers/profileMenuHandler";
 import { handleTrainingOptions } from "../handlers/trainingMenuHandler";
 import { mainMenu } from "./flows/mainMenu";
 
-export async function route(user: UserDoc, msg: string): Promise<string> {
+export async function route(
+  user: UserDoc,
+  msg: string,
+  media?: string,
+  contentType?: string
+): Promise<string> {
   const session = await getSession(user.id);
 
   if (!session) {
@@ -27,10 +32,16 @@ export async function route(user: UserDoc, msg: string): Promise<string> {
 
   const stepHandlers: Record<
     string,
-    (user: UserDoc, msg: string) => Promise<string>
+    (
+      user: UserDoc,
+      msg: string,
+      media?: string,
+      contentType?: string
+    ) => Promise<string>
   > = {
     welcome: handleName,
     ask_age: handleAge,
+    ask_terms: handleAcceptTerms,
     main_menu: handleMenu,
     profile_menu: handleProfileMenu,
     training_menu: handleTrainingMenu,
@@ -41,14 +52,14 @@ export async function route(user: UserDoc, msg: string): Promise<string> {
     ...handleTrainingOptions(),
   };
 
-  const handler = stepHandlers[session.step];
-  if (handler) return handler(user, msg);
-
   const daysDiff = differenceInDays(new Date(), session.updatedAt.toDate());
 
   if (daysDiff > 0) {
-    return greetings();
+    return mainMenu();
   }
+
+  const handler = stepHandlers[session.step];
+  if (handler) return handler(user, msg, media, contentType);
 
   if (msg.trim() === "0") {
     await setSession(user.id, { step: "main_menu" });

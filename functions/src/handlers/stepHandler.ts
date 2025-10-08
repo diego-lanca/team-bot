@@ -23,12 +23,23 @@ export async function handleAge(user: UserDoc, msg: string): Promise<string> {
   }
 
   await setUser(user.id, { age });
+  await setSession(user.id, { step: "ask_terms" });
+  return `HX7ee867afe41d6ad43796d4645744f412`;
+}
+
+export async function handleAcceptTerms(
+  user: UserDoc,
+  msg: string
+): Promise<string> {
+  const response = msg.trim().toLowerCase();
+
+  if (response.includes("aceito")) {
+    await setUser(user.id, { acceptedTerms: true });
+  }
+
   await setSession(user.id, { step: "main_menu" });
-  return (
-    `Legal! Idade ${age} registrada com sucesso.\n` +
-    "Agora você está pronto para começar!\n\n" +
-    mainMenu()
-  );
+
+  return mainMenu();
 }
 
 export async function handleMenu(user: UserDoc, msg: string): Promise<string> {
@@ -129,19 +140,21 @@ export async function handleProfileMenu(
     },
     "9": {
       step: "edit_conditions",
-      question: `${
-        user.medicalConditions
-          ? `🩺 Condições médicas atuais: ${user.medicalConditions}\n`
-          : ""
-      }Liste condições médicas relevantes: ` +
-      '(ex: Diabetes, Hipertensão) ou *0* pra cancelar',
+      question:
+        `${
+          user.medicalConditions
+            ? `🩺 Condições médicas atuais: ${user.medicalConditions}\n`
+            : ""
+        }Liste condições médicas relevantes: ` +
+        "(ex: Diabetes, Hipertensão) ou *0* pra cancelar",
     },
     "10": {
       step: "edit_injuries",
-      question: `${
-        user.injuries ? `🤕 Lesões registradas: ${user.injuries}\n` : ""
-      }Informe lesões atuais ou anteriores: ` +
-      '(ex: Ombro esquerdo, Mão direita) ou *0* pra cancelar',
+      question:
+        `${
+          user.injuries ? `🤕 Lesões registradas: ${user.injuries}\n` : ""
+        }Informe lesões atuais ou anteriores: ` +
+        "(ex: Ombro esquerdo, Mão direita) ou *0* pra cancelar",
     },
     "11": {
       step: "edit_medications",
@@ -181,8 +194,10 @@ export async function handleEditName(
 
   await setSession(user.id, { step: "profile_menu" });
 
-  return `✅ Nome atualizado para *${newName}*! ` +
-  'Digite "0" para voltar ao menu principal.';
+  return (
+    `✅ Nome atualizado para *${newName}*! ` +
+    'Digite "0" para voltar ao menu principal.'
+  );
 }
 
 export async function handleEditAge(
@@ -204,8 +219,10 @@ export async function handleEditAge(
 
   await setSession(user.id, { step: "profile_menu" });
 
-  return `✅ Idade atualizada para *${newAge} anos*! ` +
-  'Digite "0" para voltar ao menu principal.';
+  return (
+    `✅ Idade atualizada para *${newAge} anos*! ` +
+    'Digite "0" para voltar ao menu principal.'
+  );
 }
 
 export async function handleTrainingMenu(
@@ -222,11 +239,11 @@ export async function handleTrainingMenu(
         `Digite *"sim"* para continuar ou *"0"* para voltar.`,
     },
     "2": {
-      step: "ask_training_days", 
+      step: "ask_training_days",
       question:
         `Legal! Para criar um treino perfeito para você, me diga: ` +
         `*quantos dias na semana você pretende treinar?* 🤔\n\n` +
-        `Por favor, digite um número de 1 a 7. (ou "0" para voltar)`, 
+        `Por favor, digite um número de 1 a 7. (ou "0" para voltar)`,
     },
     "3": {
       step: "see_weekly_training_confirm",
@@ -283,8 +300,8 @@ export async function handleTrainingDays(
   await setSession(user.id, { step: "generate_training_confirm" });
 
   return (
-    `✅ Perfeito, ${days} dias por semana! Estou pronto para criar seu novo treino.\n\n` +
-    `Digite *"sim"* para confirmar ou *"0"* para voltar.`
+    `✅ Perfeito, ${days} dias por semana! Estou pronto para criar seu ` +
+    `novo treino.\n\nDigite *"sim"* para confirmar ou *"0"* para voltar.`
   );
 }
 
@@ -338,7 +355,9 @@ export async function handleTrainingDays(
 
 export async function handleVirtualSpecialistMenu(
   user: UserDoc,
-  msg: string
+  msg: string,
+  media?: string,
+  contentType?: string
 ): Promise<string> {
   const command = parseInt(msg.trim());
 
@@ -347,7 +366,7 @@ export async function handleVirtualSpecialistMenu(
     return mainMenu();
   }
 
-  const response = await virtualSpecialistChat(user, msg);
+  const response = await virtualSpecialistChat(user, msg, media, contentType);
 
   return response;
 }

@@ -6,6 +6,7 @@ import { User, UserDoc } from "../models/user";
 import { getUserTraining } from "./trainingPlanService";
 import { TrainingPlan } from "../models/trainingPlan";
 import { ChatSession } from "../models/chatSession";
+import axios from "axios";
 
 const openai = new OpenAI({
   apiKey: env.OPENAI_KEY,
@@ -14,12 +15,23 @@ const openai = new OpenAI({
 export const chatWithVirtualSpecialist = async (
   user: UserDoc,
   msg: string,
-  chatSession: ChatSession
+  chatSession: ChatSession,
+  media?: string,
+  contentType?: string
 ): Promise<string> => {
   const userTrain = (await getUserTraining(user.id)) ?? undefined;
 
-  // Corrigimos a chamada para generateChatPrompt
-  const promptText = generateChatPrompt(user, chatSession, msg, userTrain); 
+  console.log(media);
+  console.log(contentType);
+
+  const userPrompt = await getUserMsg(msg, media, contentType);
+
+  const promptText = generateChatPrompt(
+    user,
+    chatSession,
+    userPrompt,
+    userTrain
+  );
 
   const response = await openai.responses.create({
     model: "gpt-5-nano",
@@ -49,6 +61,41 @@ export const chatWithVirtualSpecialist = async (
   });
 
   return response.output_text;
+};
+
+const getUserMsg = async (
+  msg: string,
+  media?: string,
+  contentType?: string
+): Promise<string> => {
+  if (contentType === "audio/ogg" && media) {
+    // Baixar áudio do Twilio
+    const response = await axios.get(media, {
+      responseType: "stream",
+      auth: {
+        username: env.TWILIO_SID,
+        password: env.TWILIO_AUTH,
+      },
+    });
+
+    if (!response.data) {
+      throw new Error(`Falha ao baixar áudio do Twilio: ${response.status}`);
+    }
+
+    console.log(response.data['buffer']);
+
+    const transcription = await openai.audio.transcriptions.create({
+      file: response.data,
+      model: "gpt-4o-mini-transcribe",
+      language: "pt",
+    });
+
+    console.log(transcription.text);
+
+    return transcription.text;
+  }
+
+  return msg;
 };
 
 export const generateDayMotivation = async (): Promise<string> => {
@@ -141,7 +188,9 @@ Você é um Personal Trainer especialista em fisiologia do exercício e adaptaç
 - **Altura:** ${user.height}m
 - **Peso:** ${user.weight}kg
 - **IMC:** ${imc}
-- **Percentual de Gordura:** ${user.bodyFatPercentage ? `${user.bodyFatPercentage}%` : "Nenhuma"}
+- **Percentual de Gordura:** ${
+    user.bodyFatPercentage ? `${user.bodyFatPercentage}%` : "Nenhuma"
+  }
 - **Objetivo Principal:** ${user.goal || "Nenhuma"}
 - **Nível de Atividade:** ${user.activityLevel || "Nenhuma"}
 - **FREQUÊNCIA SEMANAL DESEJADA:** ${user.trainingDaysPerWeek} dias
@@ -219,7 +268,7 @@ const generateChatPrompt = (
   train?: TrainingPlan
 ): string => {
   // Construímos o histórico de forma explícita, adicionando a nova mensagem
-  const fullHistoric = `${chat?.chatHistoric || ''}\nUsuário: ${msg}`;
+  const fullHistoric = `${chat?.chatHistoric || ""}\nUsuário: ${msg}`;
 
   return `# Você é um Personal Trainer Virtual
 
@@ -249,7 +298,7 @@ ${fullHistoric} // <-- 2. Usamos o histórico completo com a nova mensagem
     "nivel_atividade": ${user.activityLevel}
     "condicoes_medicas": ${user.medicalConditions || []},
     "lesoes": ${user.injuries || []},
-    "medicamentos": ${user.medications || [] }
+    "medicamentos": ${user.medications || []}
   },
   "plano_treino": {
     "dias_por_semana": ${5},

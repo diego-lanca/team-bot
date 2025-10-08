@@ -7,7 +7,7 @@ export interface User {
   sex?: string;
   createdAt: FirebaseFirestore.Timestamp;
   lastSeen?: FirebaseFirestore.Timestamp;
-  trainingDaysPerWeek: number;
+  trainingDaysPerWeek?: number;
 
   // Medidas físicas
   height?: number; // em cm

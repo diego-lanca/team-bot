@@ -6,7 +6,9 @@ import { chatWithVirtualSpecialist } from "../services/openAiService";
 
 export async function virtualSpecialistChat(
   user: UserDoc,
-  msg: string
+  msg: string,
+  media?: string,
+  contentType?: string
 ): Promise<string> {
   const savedChat = await getUserChat(user.id);
 
@@ -18,7 +20,13 @@ export async function virtualSpecialistChat(
 
   const message = sanitizeMessage(msg);
 
-  const response = await chatWithVirtualSpecialist(user, message, chatSession);
+  const response = await chatWithVirtualSpecialist(
+    user,
+    message,
+    chatSession,
+    media,
+    contentType
+  );
 
   chatSession.chatHistoric.push(
     {
