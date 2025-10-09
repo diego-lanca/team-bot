@@ -1,6 +1,7 @@
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { TrainingPlan } from "../models/trainingPlan";
 import { UserDoc } from "../models/user";
+import { trainingMenu } from "../bot/flows/trainingMenu";
 
 const db = getFirestore();
 const trainingsRef = db.collection("trainings");
@@ -41,7 +42,9 @@ export async function setTrainingPlan(
 
 export async function getUserTrainings(user: UserDoc): Promise<string> {
   const training = await getUserTraining(user.id);
-  if (!training) return "";
+  if (!training) {
+    return "Você ainda não tem nenhum treino programado\n\n" + trainingMenu();
+  }
 
   // Converte semana em array para seleção
   const daysArray = Object.entries(training.week).map(([key, day]) => ({

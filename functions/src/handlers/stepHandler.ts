@@ -38,7 +38,7 @@ export async function handleMenu(user: UserDoc, msg: string): Promise<string> {
   const choice = mapping[option] || mapping[msg.toLowerCase()];
   if (!choice) {
     return (
-      "Opção inválida. Por favor, digite um número de 1 a 4.\n\n" + mainMenu()
+      "Opção inválida. Por favor, digite um número de 1 a 3.\n\n" + mainMenu()
     );
   }
 
