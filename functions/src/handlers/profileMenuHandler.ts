@@ -17,6 +17,8 @@ export function handleProfileOptions(): Record<
     edit_conditions: handleConditions,
     edit_injuries: handleInjuries,
     edit_medications: handleMedications,
+    edit_training_preference: handleTrainingPreference,
+    edit_training_hour: handleTrainingHour,
   };
 }
 
@@ -213,6 +215,79 @@ export async function handleMedications(
   await setSession(user.id, { step: "profile_menu" });
   return (
     `✅ Medicamentos registradas: ${medications.join(", ")}.\n\n` +
+    profileMenu()
+  );
+}
+
+export async function handleTrainingPreference(
+  user: UserDoc,
+  msg: string
+): Promise<string> {
+  const choice = msg.trim();
+
+  if (choice === "0") {
+    await setSession(user.id, { step: "profile_menu" });
+    return profileMenu();
+  }
+
+  if (choice !== "1" && choice !== "2") {
+    return (
+      "❌ Opção inválida. Por favor, digite *1* para Automático, " +
+      "*2* para Manual ou *0* para voltar."
+    );
+  }
+
+  const wantsToChoose = choice === "2";
+
+  await setUser(user.id, { chooseTrainOnDayMotivation: wantsToChoose });
+  await setSession(user.id, { step: "profile_menu" });
+
+  const newPreferenceText = wantsToChoose
+    ? "Manual (Escolher o treino)"
+    : "Automático (Receber o treino do dia)";
+
+  return (
+    `✅ Preferência atualizada para: *${newPreferenceText}*.\n\n` + profileMenu()
+  );
+}
+
+export async function handleTrainingHour(
+  user: UserDoc,
+  msg: string
+): Promise<string> {
+  const choice = msg.trim();
+
+  if (choice === "0") {
+    await setSession(user.id, { step: "profile_menu" });
+    return profileMenu();
+  }
+
+  const response = msg.trim();
+  const [hourString, minutesString] = response.split(":");
+
+  if (!hourString || !minutesString) {
+    return "Insira um horário no formado válido (ex: 17:30)";
+  }
+
+  const hour = parseInt(hourString);
+  const minutes = parseInt(minutesString);
+
+  console.log(typeof hour);
+  console.log(typeof minutes);
+
+  if (Number.isNaN(hour) || Number.isNaN(minutes)) {
+    return "Insira um horário com números válidos (ex: 17:30)";
+  }
+
+  if (hour < 0 || hour > 24 || minutes < 0 || minutes > 59) {
+    return "Insira um horário existente (ex: 17:30)";
+  }
+
+  await setUser(user.id, { trainingHour: `${hour}:${minutes}` });
+  await setSession(user.id, { step: "profile_menu" });
+
+  return (
+    `✅ Horário de treino atualizado para: *${response}*.\n\n` +
     profileMenu()
   );
 }

@@ -20,7 +20,7 @@ import { parseAge } from "../utils/utils";
 export function handleIntrodutionOptions(): Record<
   string,
   (user: UserDoc, msg: string) => Promise<string>
-> {
+  > {
   return {
     welcome: handleAskName,
     ask_age: handleAskAge,

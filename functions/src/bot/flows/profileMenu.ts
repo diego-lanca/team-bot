@@ -14,6 +14,7 @@ export function profileMenu(): string {
     "🔟 🤕 Lesões\n" +
     "1️⃣1️⃣ 💊 Medicações\n" +
     "1️⃣2️⃣ ⚙️ Preferência de Treino Diário\n" +
+    "1️⃣3️⃣ ⏰ Horário de Treino prefido\n" +
     "0️⃣ 🔙 Voltar\n\n" +
     "————————————\n" +
     "✏️ *Digite o número* da informação que quer atualizar."

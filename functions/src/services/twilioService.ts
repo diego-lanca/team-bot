@@ -18,15 +18,15 @@ export async function sendMessage(to: string, body: string): Promise<void> {
 
   const message = hasContentSid
     ? {
-        from: env.TWILIO_FROM,
-        to,
-        contentSid: body,
-      }
+      from: env.TWILIO_FROM,
+      to,
+      contentSid: body,
+    }
     : {
-        from: env.TWILIO_FROM,
-        to,
-        body,
-      };
+      from: env.TWILIO_FROM,
+      to,
+      body,
+    };
 
   await client.messages.create(message);
 }
