@@ -12,6 +12,7 @@ import {
 } from "../models/trainingPlan";
 import { setSession } from "../services/firestoreService";
 import { trainingMenu } from "../bot/flows/trainingMenu";
+import { sendMessage } from "../services/twilioService";
 
 export function handleTrainingOptions(): Record<
   string,
@@ -155,6 +156,12 @@ export async function handleGenerateTrainings(
       `\n${trainingMenu()}`
     );
   }
+
+  await sendMessage(
+    user.phone,
+    "🤖💪 Gerando seu treino personalizado com nosso especialista virtual..." +
+      "⏳ Aguarde um instante e já já estará pronto para você!"
+  );
 
   const train = await generateTrain(user, days);
   const trainingPlan = convertToTrainingPlan(train, user.id);
