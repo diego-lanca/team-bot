@@ -233,7 +233,7 @@ export async function handleTrainingMenu(
         `Por favor, digite um número de 1 a 7. (ou "0" para voltar)`,
     },
     "3": {
-      step: "see_weekly_training_confirm",
+      step: "training_menu",
       question: (await getWeeklyUserTrainings(user)) + "\n\n" + trainingMenu(),
     },
     "0": {

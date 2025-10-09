@@ -16,7 +16,7 @@ import { trainingMenu } from "../bot/flows/trainingMenu";
 export function handleTrainingOptions(): Record<
   string,
   (user: UserDoc, msg: string) => Promise<string>
-  > {
+> {
   return {
     see_training_confirm: handleSelectTrainingDay,
     generate_train: handleGenerateTrainings,
@@ -154,7 +154,7 @@ export async function handleGenerateTrainings(
   const train = await generateTrain(user, days);
   const trainingPlan = convertToTrainingPlan(train, user.id);
 
-  await setTrainingPlan(trainingPlan);
+  await setTrainingPlan(trainingPlan, user.id);
   await setSession(user.id, { step: "training_menu" });
 
   return `🚀 Treino novo criado com sucesso!\n\n${trainingMenu()}`;

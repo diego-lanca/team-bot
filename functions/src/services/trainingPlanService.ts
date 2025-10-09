@@ -20,8 +20,10 @@ export async function getUserTraining(
 
 export async function setTrainingPlan(
   plan: Partial<TrainingPlan>,
+  userId: string,
   docId?: string
 ): Promise<void> {
+  await deleteExsitingTrainings(userId);
   if (!docId) {
     await trainingsRef.add({
       ...plan,
@@ -38,6 +40,27 @@ export async function setTrainingPlan(
   };
 
   await trainingsRef.doc(docId).set(trainingPlan, { merge: true });
+}
+
+async function deleteExsitingTrainings(userId: string): Promise<void> {
+  const snapshot = await trainingsRef.where("userId", "==", userId).get();
+
+  const batchSize = snapshot.size;
+  if (batchSize === 0) {
+    return;
+  }
+
+  const batch = db.batch();
+  snapshot.docs.forEach((doc) => {
+    batch.delete(doc.ref);
+  });
+  await batch.commit();
+
+  // Recurse on the next process tick, to avoid
+  // exploding the stack.
+  process.nextTick(() => {
+    deleteExsitingTrainings(userId);
+  });
 }
 
 export async function getUserTrainings(user: UserDoc): Promise<string> {
