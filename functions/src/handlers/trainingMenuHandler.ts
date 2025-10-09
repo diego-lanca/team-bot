@@ -19,7 +19,8 @@ export function handleTrainingOptions(): Record<
   > {
   return {
     see_training_confirm: handleSeeTraining,
-    generate_training_confirm: handleGenerateTrainings,
+    select_training_day: handleSelectTrainingDay,
+    generate_train: handleGenerateTrainings,
     see_weekly_training_confirm: handleSeeWeeklyTraining,
   };
 }
@@ -42,11 +43,71 @@ export async function handleSeeTraining(
     return "Você ainda não tem nenhum treino programado!\n" + trainingMenu();
   }
 
-  const trainingText = getUserTodayTrain(training);
+  // Converte semana em array para seleção
+  const daysArray = Object.entries(training.week).map(([key, day]) => ({
+    key,
+    ...day,
+  }));
+
+  let msgText = "Escolha o treino que deseja ver:\n";
+  daysArray.forEach((day, idx) => {
+    msgText += `${idx + 1}. ${day.name}\n`;
+  });
+  msgText += "\nDigite o número do treino desejado ou 0 para voltar.";
+
+  await setSession(user.id, { step: "select_training_day" });
+  return msgText;
+}
+
+export async function handleSelectTrainingDay(
+  user: UserDoc,
+  msg: string
+): Promise<string> {
+  const command = msg.trim().toLowerCase();
+
+  const training = await getUserTraining(user.id);
+  if (!training) {
+    await setSession(user.id, { step: "training_menu" });
+    return "Você ainda não tem nenhum treino programado!\n" + trainingMenu();
+  }
+
+  const daysArray = Object.entries(training.week).map(([key, day]) => ({
+    key,
+    ...day,
+  }));
+
+  const selectedIdx = parseInt(command) - 1;
+  if (
+    isNaN(selectedIdx) ||
+    selectedIdx < 0 ||
+    selectedIdx >= daysArray.length
+  ) {
+    return "Opção inválida. Digite o número do treino que deseja ver.";
+  }
+
+  const selectedDay = daysArray[selectedIdx];
 
   await setSession(user.id, { step: "training_menu" });
 
-  return `${trainingText}\n\nO que deseja fazer agora?\n` + trainingMenu();
+  // Monta texto do treino selecionado
+  let trainingText = `📌 Treino: ${selectedDay.name}\n\n`;
+
+  if (selectedDay.exercises.length > 0) {
+    trainingText += "🏋️ *Exercícios*:\n";
+    selectedDay.exercises.forEach((ex, idx) => {
+      trainingText += `   ${idx + 1}. ${ex.name}\n`;
+      trainingText += `      • Séries: ${ex.sets}\n`;
+      trainingText += `      • Repetições: ${ex.reps}\n`;
+      if (ex.restSeconds) {
+        trainingText += `      • Descanso: ${ex.restSeconds}s\n`;
+      }
+      if (ex.notes) trainingText += `      • Obs: ${ex.notes}\n`;
+    });
+  } else {
+    trainingText += "   Nenhum exercício cadastrado.\n";
+  }
+
+  return `${trainingText}\n\n` + trainingMenu();
 }
 
 export function getUserTodayTrain(training: TrainingPlan): string {
@@ -106,10 +167,12 @@ export async function handleGenerateTrainings(
     return trainingMenu();
   }
 
-  if (command !== "sim" && command !== "confirmo") {
+  const days = parseInt(command);
+
+  if (days < 1 && days > 7) {
     return (
-      'Não entendi sua resposta. Por favor, digite "sim" para ' +
-      'criar um novo treino ou "0" para voltar.'
+      "Não entendi sua resposta. Por favor, digite um número válido de dias " +
+      'para criar um novo treino ou "0" para voltar.'
     );
   }
 
@@ -124,7 +187,7 @@ export async function handleGenerateTrainings(
     );
   }
 
-  const train = await generateTrain(user);
+  const train = await generateTrain(user, days);
   const trainingPlan = convertToTrainingPlan(train, user.id);
 
   await setTrainingPlan(trainingPlan);
@@ -159,23 +222,11 @@ export async function handleSeeWeeklyTraining(
   }
 
   // Monta texto formatado
-  let trainingText = `📅 *Treino da Semana*\n`;
+  let trainingText = `📅 *Todos os Treinos*\n`;
 
-  for (const [day, dayTraining] of Object.entries(weekTraining)) {
-    const daysMap: Record<string, string> = {
-      sunday: "Domingo",
-      monday: "Segunda-feira",
-      tuesday: "Terça-feira",
-      wednesday: "Quarta-feira",
-      thursday: "Quinta-feira",
-      friday: "Sexta-feira",
-      saturday: "Sábado",
-    };
-
-    trainingText += `📌 ${day}: ${daysMap[dayTraining.name]}\n`;
-
+  for (const [_, dayTraining] of Object.entries(weekTraining)) {
     if (dayTraining.exercises.length > 0) {
-      trainingText += "🏋️ *Exercícios*:\n";
+      trainingText += `📌 Treino: ${dayTraining.name}\n\n🏋️ *Exercícios*:\n`;
       dayTraining.exercises.forEach((ex, idx) => {
         trainingText += `   ${idx + 1}. ${ex.name}\n`;
         trainingText += `      • Séries: ${ex.sets}\n`;
@@ -188,11 +239,13 @@ export async function handleSeeWeeklyTraining(
         }
       });
     } else {
-      trainingText += "   Nenhum exercício cadastrado.\n";
+      trainingText += "   Nenhum exercício cadastrado.";
     }
+
+    trainingText += "\n";
   }
 
   await setSession(user.id, { step: "training_menu" });
 
-  return `${trainingText}\n\nO que deseja fazer agora?\n` + trainingMenu();
+  return trainingText + trainingMenu();
 }

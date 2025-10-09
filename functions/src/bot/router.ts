@@ -2,14 +2,11 @@
 import { differenceInDays } from "date-fns";
 import { UserDoc } from "../models/user";
 import { getSession, setSession } from "../services/firestoreService";
-import { welcome } from "./flows/welcome";
+import { welcome } from "./flows/introduction/welcome";
 import {
-  handleAcceptTerms,
-  handleAge,
   handleEditAge,
   handleEditName,
   handleMenu,
-  handleName,
   handleProfileMenu,
   handleTrainingMenu,
   handleVirtualSpecialistMenu,
@@ -17,6 +14,7 @@ import {
 import { handleProfileOptions } from "../handlers/profileMenuHandler";
 import { handleTrainingOptions } from "../handlers/trainingMenuHandler";
 import { mainMenu } from "./flows/mainMenu";
+import { handleIntrodutionOptions } from "../handlers/introdutionHandler";
 
 export async function route(
   user: UserDoc,
@@ -39,9 +37,7 @@ export async function route(
       contentType?: string
     ) => Promise<string>
   > = {
-    welcome: handleName,
-    ask_age: handleAge,
-    ask_terms: handleAcceptTerms,
+    ...handleIntrodutionOptions(),
     main_menu: handleMenu,
     profile_menu: handleProfileMenu,
     training_menu: handleTrainingMenu,

@@ -1,55 +1,11 @@
-import { askAge } from "../bot/flows/askAge";
 import { mainMenu } from "../bot/flows/mainMenu";
 import { profileMenu } from "../bot/flows/profileMenu";
 import { UserDoc } from "../models/user";
 import { setSession } from "../services/firestoreService";
 import { setUser } from "../services/userService";
-import { parseAge } from "../utils/utils";
 import { trainingMenu } from "../bot/flows/trainingMenu";
 import { virtualSpecialistMenu } from "../bot/flows/virtualSpecialistMenu";
 import { virtualSpecialistChat } from "./virtualSpecialistHandler";
-
-export async function handleName(user: UserDoc, msg: string): Promise<string> {
-  const userName = msg.trim();
-
-  // Verificamos se o nome não é muito curto, muito longo ou composto apenas por números.
-  if (userName.length < 2 || userName.length > 50 || /^\d+$/.test(userName)) {
-    return (
-      "Hmm, esse nome não parece válido. 🤔\n" +
-      "Por favor, digite um nome real para que a gente possa se conhecer melhor."
-    );
-  }
-  
-  await setUser(user.id, { name: userName });
-  await setSession(user.id, { step: "ask_age" });
-  return askAge({ ...user, name: userName });
-}
-
-export async function handleAge(user: UserDoc, msg: string): Promise<string> {
-  const age = parseAge(msg);
-  if (age === null || (age < 12 && age > 100)) {
-    return "Por favor, digite um número válido para a sua idade.";
-  }
-
-  await setUser(user.id, { age });
-  await setSession(user.id, { step: "ask_terms" });
-  return `HX7ee867afe41d6ad43796d4645744f412`;
-}
-
-export async function handleAcceptTerms(
-  user: UserDoc,
-  msg: string
-): Promise<string> {
-  const response = msg.trim().toLowerCase();
-
-  if (response.includes("aceito")) {
-    await setUser(user.id, { acceptedTerms: true });
-  }
-
-  await setSession(user.id, { step: "main_menu" });
-
-  return mainMenu();
-}
 
 export async function handleMenu(user: UserDoc, msg: string): Promise<string> {
   const option = msg.trim().toLowerCase();
@@ -248,7 +204,7 @@ export async function handleTrainingMenu(
         `Digite *"sim"* para continuar ou *"0"* para voltar.`,
     },
     "2": {
-      step: "ask_training_days",
+      step: "generate_train",
       question:
         `Legal! Para criar um treino perfeito para você, me diga: ` +
         `*quantos dias na semana você pretende treinar?* 🤔\n\n` +
@@ -257,7 +213,7 @@ export async function handleTrainingMenu(
     "3": {
       step: "see_weekly_training_confirm",
       question:
-        `Certo! Preparando para exibir o treino da semana toda. 📅\n` +
+        `Certo! Preparando para exibir todos os seus treinos. 📅\n` +
         `Posso continuar? Digite *"sim"* para confirmar ou *"0"* para voltar.`,
     },
     "0": {
@@ -280,38 +236,6 @@ export async function handleTrainingMenu(
 
   await setSession(user.id, { step: choice.step });
   return choice.question;
-}
-
-export async function handleTrainingDays(
-  user: UserDoc,
-  msg: string
-): Promise<string> {
-  const days = parseInt(msg.trim(), 10);
-
-  if (msg.trim() === "0") {
-    await setSession(user.id, { step: "training_menu" });
-    return trainingMenu();
-  }
-
-  if (isNaN(days) || days < 1 || days > 7) {
-    return (
-      "❌ Ops! Parece que você não digitou um número válido. " +
-      "Por favor, informe um número de 1 a 7.\n\n" +
-      'Ou digite "0" para voltar.'
-    );
-  }
-
-  // Salva a informação no perfil do usuário
-  // É importante que o campo 'trainingDaysPerWeek' exista no seu tipo UserDoc
-  await setUser(user.id, { trainingDaysPerWeek: days });
-
-  // Agora, avançamos para a confirmação final
-  await setSession(user.id, { step: "generate_training_confirm" });
-
-  return (
-    `✅ Perfeito, ${days} dias por semana! Estou pronto para criar seu ` +
-    `novo treino.\n\nDigite *"sim"* para confirmar ou *"0"* para voltar.`
-  );
 }
 
 // export async function handleNutritionMenu(

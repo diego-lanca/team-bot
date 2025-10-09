@@ -38,7 +38,7 @@ export const onMessage = onRequest(
         MediaContentType0
       );
 
-      await sendMessage(userPhone, reply);
+      // await sendMessage(userPhone, reply);
 
       res.status(200).send(reply);
     } catch (err) {

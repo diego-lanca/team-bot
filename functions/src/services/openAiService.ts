@@ -119,7 +119,10 @@ export const generateDayMotivation = async (): Promise<string> => {
   return response.output_text;
 };
 
-export const generateTrain = async (user: User): Promise<object> => {
+export const generateTrain = async (
+  user: User,
+  days: number
+): Promise<object> => {
   const response = await openai.responses.create({
     model: "gpt-5-nano",
     input: [
@@ -137,7 +140,7 @@ export const generateTrain = async (user: User): Promise<object> => {
         content: [
           {
             type: "input_text",
-            text: generateUserPrompt(user),
+            text: generateUserPrompt(user, days),
           },
         ],
       },
@@ -156,99 +159,34 @@ export const generateTrain = async (user: User): Promise<object> => {
     include: ["reasoning.encrypted_content"],
   });
 
+  console.log(response.output_text);
+
   return JSON.parse(response.output_text);
 };
 
-const generateUserPrompt = (user: User): string => {
+const generateUserPrompt = (user: User, days: number): string => {
   if (!user.weight || !user.height) {
     throw new Error("Peso e altura são obrigatórios para gerar o treino.");
   }
 
   const imc = (user.weight / (user.height * user.height)).toFixed(2);
 
-  return `
----
-**PAPEL E OBJETIVO:**
-Você é um Personal Trainer especialista em fisiologia do exercício e adaptação de treinos. Sua tarefa é criar um plano de treino em formato JSON, seguro e eficaz, com base nas informações do usuário e seguindo TODAS as regras estritamente.
+  console.log(`Gerando treino para: ${days} dias`);
 
----
-**PERFIL DO USUÁRIO:**
-- **Idade:** ${user.age} anos
-- **Sexo:** ${user.sex}
-- **Altura:** ${user.height}m
-- **Peso:** ${user.weight}kg
-- **IMC:** ${imc}
-- **Percentual de Gordura:** ${
-    user.bodyFatPercentage ? `${user.bodyFatPercentage}%` : "Nenhuma"
-  }
-- **Objetivo Principal:** ${user.goal || "Nenhuma"}
-- **Nível de Atividade:** ${user.activityLevel || "Nenhuma"}
-- **FREQUÊNCIA SEMANAL DESEJADA:** ${user.trainingDaysPerWeek} dias
-
----
-**REGRAS E RESTRIÇÕES PARA O TREINO (INSTRUÇÕES CRÍTICAS):**
-${
-  user.injuries && user.injuries.length > 0
-    ? `- **LESÕES:** O usuário relatou as seguintes lesões: **${user.injuries.join(
-        ", "
-      )}**.
-  - **AÇÃO OBRIGATÓRIA:** Adapte o treino para EVITAR COMPLETAMENTE qualquer exercício que cause dor, pressão ou estresse direto nessas áreas. Ofereça exercícios alternativos e seguros que fortaleçam a musculatura de suporte ao redor da lesão, se aplicável.`
-    : "- **LESÕES:** Nenhuma lesão informada."
-}
-${
-  user.medicalConditions && user.medicalConditions.length > 0
-    ? `- **CONDIÇÕES MÉDICAS:** O usuário tem as seguintes condições: **${user.medicalConditions.join(
-        ", "
-      )}**.
-  - **AÇÃO OBRIGATÓRIA:** A intensidade, volume e tipo de exercício devem ser apropriados para estas condições. Por exemplo, para hipertensão, evite manobras de valsalva (prender a respiração) e picos de alta intensidade. Para diabetes, priorize exercícios de intensidade moderada e consistente.`
-    : "- **CONDIÇÕES MÉDICAS:** Nenhuma condição informada."
-}
-${
-  user.medications && user.medications.length > 0
-    ? `- **MEDICAMENTOS:** O usuário utiliza: **${user.medications.join(
-        ", "
-      )}**.
-  - **AÇÃO DE ATENÇÃO:** Apenas considere que certos medicamentos podem influenciar a performance ou mascarar a dor. Inclua um aviso genérico para o usuário treinar com cautela.`
-    : "- **MEDICAMENTOS:** Nenhum medicamento informado."
-}
-
----
-**FORMATO DE SAÍDA (JSON):**
-O plano de treino DEVE ser um objeto JSON. A estrutura deve ser a seguinte:
-{
-  "planoDeTreino": {
-    "nomePlano": "Treino para ${user.goal}",
-    "observacaoImportante": "Lembre-se de consultar um médico antes de iniciar. Este treino foi adaptado às suas condições, mas a percepção de dor é um sinal para parar.",
-    "diasDeTreino": [
-      {
-        "dia": "A",
-        "grupoMuscular": "Peito, Ombros e Tríceps",
-        "exercicios": [
-          { "nome": "Supino Reto com Halteres", "series": "3", "repeticoes": "10-12" },
-          { "nome": "Desenvolvimento com Halteres", "series": "3", "repeticoes": "10-12" }
-        ]
-      },
-      {
-        "dia": "B",
-        "grupoMuscular": "Costas e Bíceps",
-        "exercicios": [
-          { "nome": "Remada Curvada", "series": "3", "repeticoes": "10-12" },
-          { "nome": "Rosca Direta", "series": "3", "repeticoes": "10-12" }
-        ]
-      },
-      {
-        "dia": "C",
-        "grupoMuscular": "Pernas e Abdômen",
-        "exercicios": [
-          { "nome": "Agachamento Livre", "series": "3", "repeticoes": "10-12" },
-          { "nome": "Prancha", "series": "3", "repeticoes": "30 segundos" }
-        ]
-      }
-    ]
-  }
-}
----
-`;
+  return `{
+idade: ${user.age},
+sexo: ${user.sex},
+altura: ${user.height},
+peso: ${user.weight},
+imc: ${imc},
+nivel_atividade: ${user.activityLevel}
+objetivo: ${user.goal},
+dias_por_semana: ${days},
+gordura_corporal_percent: ${user.bodyFatPercentage},
+injuries: ${user.injuries},
+medical_conditions: ${user.medicalConditions},
+medications: ${user.medications},
+}`;
 };
 
 const generateChatPrompt = (
