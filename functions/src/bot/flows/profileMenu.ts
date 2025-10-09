@@ -13,6 +13,7 @@ export function profileMenu(): string {
     "9️⃣ 🩺 Condições Médicas\n" +
     "🔟 🤕 Lesões\n" +
     "1️⃣1️⃣ 💊 Medicações\n" +
+    "1️⃣2️⃣ ⚙️ Preferência de Treino Diário\n" +
     "0️⃣ 🔙 Voltar\n\n" +
     "————————————\n" +
     "✏️ *Digite o número* da informação que quer atualizar."
