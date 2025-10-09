@@ -46,7 +46,7 @@ export function convertToTrainingPlan(json: any, userId: string): TrainingPlan {
   const week: TrainingPlan["week"] = {};
 
   for (const dia of json.plano_treino.dias) {
-    const diaSemana = dia.dia === "" ? dia.dia_semana : dia.dia;
+    const diaSemana = dia.dia || dia.dia_semana;
 
     const key = dayMap[diaSemana];
     if (!key) continue;
