@@ -2,7 +2,7 @@ import { mainMenu } from "../bot/flows/mainMenu";
 import { profileMenu } from "../bot/flows/profileMenu";
 import { UserDoc } from "../models/user";
 import { setSession } from "../services/firestoreService";
-import { setUser } from "../services/userService";
+import { getUserHourTraining, setUser } from "../services/userService";
 import { trainingMenu } from "../bot/flows/trainingMenu";
 import { virtualSpecialistMenu } from "../bot/flows/virtualSpecialistMenu";
 import { virtualSpecialistChat } from "./virtualSpecialistHandler";
@@ -11,6 +11,7 @@ import {
   getUserTrainings,
   getWeeklyUserTrainings,
 } from "../services/trainingPlanService";
+import { scheduleMessage } from "../services/twilioService";
 
 export async function handleMenu(user: UserDoc, msg: string): Promise<string> {
   const option = msg.trim().toLowerCase();
@@ -352,6 +353,15 @@ export async function handleSelectDailyTraining(
   }
 
   await setSession(user.id, { step: "main_menu" });
+
+  await scheduleMessage(
+    user.phone,
+    "💪 Bora pro treino de hoje!\n" +
+      "Nada de deixar pra depois — seu corpo e sua mente vão " +
+      "te agradecer depois.\n🔥 Só depende de você!" +
+      trainingText,
+    getUserHourTraining(user)
+  );
 
   return `${trainingText}\n\n` + mainMenu();
 }

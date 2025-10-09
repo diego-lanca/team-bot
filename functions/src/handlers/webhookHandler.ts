@@ -1,11 +1,15 @@
 // import { sendMessage } from "../services/twilioService";
 import { route } from "../bot/router";
 import { onRequest } from "firebase-functions/v2/https";
-import { fetchUser, getUsersWithTermsAccepted } from "../services/userService";
+import {
+  fetchUser,
+  getUserHourTraining,
+  getUsersWithTermsAccepted,
+} from "../services/userService";
 import { onSchedule } from "firebase-functions/scheduler";
 import { generateDayMotivation } from "../services/openAiService";
 import { UserDoc } from "../models/user";
-import { sendMessage } from "../services/twilioService";
+import { scheduleMessage, sendMessage } from "../services/twilioService";
 import PromisePool from "@supercharge/promise-pool";
 import {
   getUserTraining,
@@ -52,38 +56,51 @@ export const onMessage = onRequest(
   }
 );
 
-export const testSendDayMotivation = onRequest(
-  { timeoutSeconds: 1200, region: "southamerica-east1" },
-  async () => {
-    const dayMotivation: string = await generateDayMotivation();
+// export const testSendDayMotivation = onRequest(
+//   { timeoutSeconds: 1200, region: "southamerica-east1" },
+//   async (req, res) => {
+//     const dayMotivation: string = await generateDayMotivation();
 
-    const users: UserDoc[] = await getUsersWithTermsAccepted();
+//     const users: UserDoc[] = await getUsersWithTermsAccepted();
 
-    await PromisePool.withConcurrency(3)
-      .for(users)
-      .process(async (user) => {
-        let message = dayMotivation + "\n";
+//     console.log(users.length);
 
-        const training = await getUserTraining(user.id);
+//     await PromisePool.withConcurrency(3)
+//       .for(users)
+//       .process(async (user) => {
+//         let message = dayMotivation + "\n";
 
-        if (!training) await setSession(user.id, { step: "main_menu" });
+//         const training = await getUserTraining(user.id);
+//         if (training) {
+//           let trainingText = "";
+//           if (!user.chooseTrainOnDayMotivation) {
+//             trainingText += getUserTodayTrain(training);
+//             await scheduleMessage(
+//               user.phone,
+//               "💪 Bora pro treino de hoje!\n" +
+//                 "Nada de deixar pra depois — seu corpo e sua mente vão " +
+//                 "te agradecer depois.\n🔥 Só depende de você!" +
+//                 trainingText,
+//               getUserHourTraining(user)
+//             );
+//             await setSession(user.id, { step: "main_menu" });
+//           } else {
+//             trainingText += await getUserTrainings(user);
+//             await setSession(user.id, { step: "select_daily_training" });
+//           }
 
-        if (training) {
-          if (!user.chooseTrainOnDayMotivation) {
-            message += getUserTodayTrain(training);
-            await setSession(user.id, { step: "main_menu" });
-          } else {
-            message += await getUserTrainings(user);
-            await setSession(user.id, { step: "select_daily_training" });
-          }
-        }
+//           message += trainingText;
+//           console.log(message);
+//           console.log(user.name);
+//         }
 
-        await sendMessage(user.phone, message);
-      });
+//         await sendMessage(user.phone, message);
+//       });
 
-    console.log("Day motivation sended");
-  }
-);
+//     console.log("Day motivation sended");
+//     res.status(200).send();
+//   }
+// );
 
 export const generateAndSendDayMotivation = onSchedule(
   {
@@ -103,13 +120,26 @@ export const generateAndSendDayMotivation = onSchedule(
 
         const training = await getUserTraining(user.id);
         if (training) {
+          let trainingText = "";
+
           if (!user.chooseTrainOnDayMotivation) {
-            message += getUserTodayTrain(training);
+            trainingText += getUserTodayTrain(training);
+
+            await scheduleMessage(
+              user.phone,
+              "💪 Bora pro treino de hoje!\n" +
+                "Nada de deixar pra depois — seu corpo e sua mente vão " +
+                "te agradecer depois.\n🔥 Só depende de você!" +
+                trainingText,
+              getUserHourTraining(user)
+            );
             await setSession(user.id, { step: "main_menu" });
           } else {
-            message += await getUserTrainings(user);
+            trainingText += await getUserTrainings(user);
             await setSession(user.id, { step: "select_daily_training" });
           }
+
+          message += trainingText;
         }
 
         await sendMessage(user.phone, message);

@@ -18,15 +18,29 @@ export async function sendMessage(to: string, body: string): Promise<void> {
 
   const message = hasContentSid
     ? {
-      from: env.TWILIO_FROM,
-      to,
-      contentSid: body,
-    }
+        from: env.TWILIO_FROM,
+        to,
+        contentSid: body,
+      }
     : {
-      from: env.TWILIO_FROM,
-      to,
-      body,
-    };
+        from: env.TWILIO_FROM,
+        to,
+        body,
+      };
 
   await client.messages.create(message);
+}
+
+export async function scheduleMessage(
+  to: string,
+  body: string,
+  date: Date
+): Promise<void> {
+  await client.messages.create({
+    from: env.TWILIO_FROM,
+    to,
+    contentSid: body,
+    scheduleType: "fixed",
+    sendAt: date,
+  });
 }

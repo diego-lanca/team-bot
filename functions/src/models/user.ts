@@ -1,3 +1,5 @@
+import { Timestamp } from "firebase-admin/firestore";
+
 export interface User {
   // Dados pessoais
   name?: string;
@@ -5,10 +7,11 @@ export interface User {
   acceptedTerms: boolean;
   age?: number;
   sex?: string;
-  createdAt: FirebaseFirestore.Timestamp;
-  lastSeen?: FirebaseFirestore.Timestamp;
+  createdAt: Timestamp;
+  lastSeen?: Timestamp;
 
   chooseTrainOnDayMotivation?: boolean;
+  trainingHour?: string;
 
   // Medidas físicas
   height?: number; // em cm

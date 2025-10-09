@@ -9,6 +9,7 @@ import { askInjuries } from "../bot/flows/introduction/askInjuries";
 import { askMedicalConditions } from "../bot/flows/introduction/askMedicalConditions";
 import { askMedications } from "../bot/flows/introduction/askMedications";
 import { askSex } from "../bot/flows/introduction/askSex";
+import { askTrainingHour } from "../bot/flows/introduction/askTrainingHour";
 import { askWeight } from "../bot/flows/introduction/askWeight";
 import { mainMenu } from "../bot/flows/mainMenu";
 import { UserDoc } from "../models/user";
@@ -32,6 +33,7 @@ export function handleIntrodutionOptions(): Record<
     ask_conditions: handleAskConditions,
     ask_injuries: handleAskInjuries,
     ask_medications: handleAskMedications,
+    ask_training_hour: handleAskTrainingHour,
     ask_terms: handleAskAcceptTerms,
   };
 }
@@ -267,8 +269,8 @@ export async function handleAskMedications(
   msg: string
 ): Promise<string> {
   if (msg.trim() == "0") {
-    await setSession(user.id, { step: "ask_terms" });
-    return `HX7ee867afe41d6ad43796d4645744f412`;
+    await setSession(user.id, { step: "ask_training_hour" });
+    return askTrainingHour();
   }
   const medications = msg.split(",");
 
@@ -280,6 +282,40 @@ export async function handleAskMedications(
   }
 
   await setUser(user.id, { medications });
+  await setSession(user.id, { step: "ask_training_hour" });
+  return (
+    `💊 Medicamentos registrados: *${medications.join(", ")}*.\n\n` +
+    askTrainingHour()
+  );
+}
+
+export async function handleAskTrainingHour(
+  user: UserDoc,
+  msg: string
+): Promise<string> {
+  const response = msg.trim();
+  const [hourString, minutesString] = response.split(":");
+
+  if (!hourString || !minutesString) {
+    return "Insira um horário no formado válido (ex: 17:30)";
+  }
+
+  const hour = parseInt(hourString);
+  const minutes = parseInt(minutesString);
+
+  console.log(typeof hour);
+  console.log(typeof minutes);
+
+  if (Number.isNaN(hour) || Number.isNaN(minutes)) {
+    return "Insira um horário com números válidos (ex: 17:30)";
+  }
+
+  if (hour < 0 || hour > 24 || minutes < 0 || minutes > 59) {
+    return "Insira um horário existente (ex: 17:30)";
+  }
+
+  await setUser(user.id, { trainingHour: `${hour}:${minutes}` });
+
   await setSession(user.id, { step: "ask_terms" });
   return `HX7ee867afe41d6ad43796d4645744f412`;
 }

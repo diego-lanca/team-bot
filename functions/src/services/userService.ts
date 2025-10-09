@@ -45,6 +45,24 @@ export async function getUserByPhone(phone: string): Promise<UserDoc | null> {
   return { id: doc.id, ...(doc.data() as User) };
 }
 
+export function getUserHourTraining(user: UserDoc): Date {
+  const now = new Date();
+  const [hourString, minutesString] = user.trainingHour!.split(':');
+
+  const hours = parseInt(hourString);
+  const minutes = parseInt(minutesString);
+
+  const hourDate = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+    hours,
+    minutes
+  );
+
+  return hourDate;
+}
+
 export async function setUser(
   userId: string,
   userData: Partial<User>
