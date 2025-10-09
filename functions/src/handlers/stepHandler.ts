@@ -9,6 +9,7 @@ import { virtualSpecialistChat } from "./virtualSpecialistHandler";
 import {
   getUserTraining,
   getUserTrainings,
+  getWeeklyUserTrainings,
 } from "../services/trainingPlanService";
 
 export async function handleMenu(user: UserDoc, msg: string): Promise<string> {
@@ -214,9 +215,7 @@ export async function handleTrainingMenu(
     },
     "3": {
       step: "see_weekly_training_confirm",
-      question:
-        `Certo! Preparando para exibir todos os seus treinos. 📅\n` +
-        `Posso continuar? Digite *"sim"* para confirmar ou *"0"* para voltar.`,
+      question: (await getWeeklyUserTrainings(user)) + trainingMenu(),
     },
     "0": {
       step: "main_menu",

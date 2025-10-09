@@ -20,7 +20,6 @@ export function handleTrainingOptions(): Record<
   return {
     see_training_confirm: handleSelectTrainingDay,
     generate_train: handleGenerateTrainings,
-    see_weekly_training_confirm: handleSeeWeeklyTraining,
   };
 }
 
@@ -159,58 +158,4 @@ export async function handleGenerateTrainings(
   await setSession(user.id, { step: "training_menu" });
 
   return `🚀 Treino novo criado com sucesso!\n\n${trainingMenu()}`;
-}
-
-export async function handleSeeWeeklyTraining(
-  user: UserDoc,
-  msg: string
-): Promise<string> {
-  const command = msg.trim().toLowerCase();
-
-  if (command === "0") {
-    await setSession(user.id, { step: "training_menu" });
-    return trainingMenu();
-  }
-
-  const training = await getUserTraining(user.id);
-
-  if (!training) {
-    await setSession(user.id, { step: "training_menu" });
-    return "Você ainda não tem nenhum treino programado!\n\n" + trainingMenu();
-  }
-
-  const weekTraining = training.week;
-
-  if (!weekTraining) {
-    await setSession(user.id, { step: "training_menu" });
-    return "Não há treino programado para esta semana.\n\n" + trainingMenu();
-  }
-
-  // Monta texto formatado
-  let trainingText = `📅 *Todos os Treinos*\n`;
-
-  for (const [_, dayTraining] of Object.entries(weekTraining)) {
-    if (dayTraining.exercises.length > 0) {
-      trainingText += `📌 Treino: ${dayTraining.name}\n\n🏋️ *Exercícios*:\n`;
-      dayTraining.exercises.forEach((ex, idx) => {
-        trainingText += `   ${idx + 1}. ${ex.name}\n`;
-        trainingText += `      • Séries: ${ex.sets}\n`;
-        trainingText += `      • Repetições: ${ex.reps}\n`;
-        if (ex.restSeconds) {
-          trainingText += `      • Descanso: ${ex.restSeconds}s\n`;
-        }
-        if (ex.notes) {
-          trainingText += `      • Obs: ${ex.notes}\n`;
-        }
-      });
-    } else {
-      trainingText += "   Nenhum exercício cadastrado.";
-    }
-
-    trainingText += "\n";
-  }
-
-  await setSession(user.id, { step: "training_menu" });
-
-  return trainingText + trainingMenu();
 }

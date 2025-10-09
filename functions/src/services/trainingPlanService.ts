@@ -57,3 +57,43 @@ export async function getUserTrainings(user: UserDoc): Promise<string> {
 
   return msgText;
 }
+
+export async function getWeeklyUserTrainings(user: UserDoc): Promise<string> {
+  const training = await getUserTraining(user.id);
+
+  if (!training) {
+    return "Você ainda não tem nenhum treino programado!\n\n";
+  }
+
+  const weekTraining = training.week;
+
+  if (!weekTraining) {
+    return "Não há treino programado para esta semana.\n\n";
+  }
+
+  // Monta texto formatado
+  let trainingText = `📅 *Todos os Treinos*\n`;
+
+  for (const [_, dayTraining] of Object.entries(weekTraining)) {
+    if (dayTraining.exercises.length > 0) {
+      trainingText += `📌 Treino: ${dayTraining.name}\n\n🏋️ *Exercícios*:\n`;
+      dayTraining.exercises.forEach((ex, idx) => {
+        trainingText += `   ${idx + 1}. ${ex.name}\n`;
+        trainingText += `      • Séries: ${ex.sets}\n`;
+        trainingText += `      • Repetições: ${ex.reps}\n`;
+        if (ex.restSeconds) {
+          trainingText += `      • Descanso: ${ex.restSeconds}s\n`;
+        }
+        if (ex.notes) {
+          trainingText += `      • Obs: ${ex.notes}\n`;
+        }
+      });
+    } else {
+      trainingText += "   Nenhum exercício cadastrado.";
+    }
+
+    trainingText += "\n";
+  }
+
+  return trainingText;
+}
