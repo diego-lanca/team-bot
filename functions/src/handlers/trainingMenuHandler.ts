@@ -29,6 +29,11 @@ export async function handleSelectTrainingDay(
 ): Promise<string> {
   const command = msg.trim().toLowerCase();
 
+  if (command === "0") {
+    await setSession(user.id, { step: "training_menu" });
+    return trainingMenu();
+  }
+
   const training = await getUserTraining(user.id);
   if (!training) {
     await setSession(user.id, { step: "training_menu" });
