@@ -133,6 +133,14 @@ export async function handleProfileMenu(
         user.medications ? `💊 Medicamentos em uso: ${user.medications}\n` : ""
       }Liste medicamentos em uso ou *0* pra cancelar:`,
     },
+    "12": {
+      step: "edit_training_preference", // Novo passo na conversa
+      question:
+        "Você prefere receber seu treino diário de que forma?\n\n" +
+        "1️⃣ *Automática*: Eu te envio o treino específico do dia (ex: Treino A).\n" +
+        "2️⃣ *Manual*: Eu te envio as opções e você escolhe qual treinar (ex: A, B ou C).\n\n" +
+        "Digite *1* ou *2* (ou *0* para voltar).",
+    },
     "0": {
       step: "main_menu",
       question: mainMenu(),
@@ -144,6 +152,36 @@ export async function handleProfileMenu(
 
   await setSession(user.id, { step: choice.step });
   return choice.question;
+}
+
+export async function handleTrainingPreference(
+  user: UserDoc,
+  msg: string
+): Promise<string> {
+  const choice = msg.trim();
+
+  if (choice === "0") {
+    await setSession(user.id, { step: "profile_menu" });
+    return profileMenu();
+  }
+
+  if (choice !== "1" && choice !== "2") {
+    return "❌ Opção inválida. Por favor, digite *1* para Automático, *2* para Manual ou *0* para voltar.";
+  }
+
+  const wantsToChoose = choice === "2";
+
+  await setUser(user.id, { chooseTrainOnDayMotivation: wantsToChoose });
+  await setSession(user.id, { step: "profile_menu" });
+
+  const newPreferenceText = wantsToChoose
+    ? "Manual (Escolher o treino)"
+    : "Automático (Receber o treino do dia)";
+
+  return (
+    `✅ Preferência atualizada para: *${newPreferenceText}*.` +
+    profileMenu() 
+  );
 }
 
 export async function handleEditName(
