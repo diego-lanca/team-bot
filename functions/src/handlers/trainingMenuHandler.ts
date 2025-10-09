@@ -18,45 +18,10 @@ export function handleTrainingOptions(): Record<
   (user: UserDoc, msg: string) => Promise<string>
   > {
   return {
-    see_training_confirm: handleSeeTraining,
-    select_training_day: handleSelectTrainingDay,
+    see_training_confirm: handleSelectTrainingDay,
     generate_train: handleGenerateTrainings,
     see_weekly_training_confirm: handleSeeWeeklyTraining,
   };
-}
-
-export async function handleSeeTraining(
-  user: UserDoc,
-  msg: string
-): Promise<string> {
-  const command = msg.trim().toLowerCase();
-
-  if (command === "0") {
-    await setSession(user.id, { step: "training_menu" });
-    return trainingMenu();
-  }
-
-  const training = await getUserTraining(user.id);
-
-  if (!training) {
-    await setSession(user.id, { step: "training_menu" });
-    return "Você ainda não tem nenhum treino programado!\n" + trainingMenu();
-  }
-
-  // Converte semana em array para seleção
-  const daysArray = Object.entries(training.week).map(([key, day]) => ({
-    key,
-    ...day,
-  }));
-
-  let msgText = "Escolha o treino que deseja ver:\n";
-  daysArray.forEach((day, idx) => {
-    msgText += `${idx + 1}. ${day.name}\n`;
-  });
-  msgText += "\nDigite o número do treino desejado ou 0 para voltar.";
-
-  await setSession(user.id, { step: "select_training_day" });
-  return msgText;
 }
 
 export async function handleSelectTrainingDay(
@@ -87,8 +52,6 @@ export async function handleSelectTrainingDay(
 
   const selectedDay = daysArray[selectedIdx];
 
-  await setSession(user.id, { step: "training_menu" });
-
   // Monta texto do treino selecionado
   let trainingText = `📌 Treino: ${selectedDay.name}\n\n`;
 
@@ -106,6 +69,8 @@ export async function handleSelectTrainingDay(
   } else {
     trainingText += "   Nenhum exercício cadastrado.\n";
   }
+
+  await setSession(user.id, { step: "training_menu" });
 
   return `${trainingText}\n\n` + trainingMenu();
 }

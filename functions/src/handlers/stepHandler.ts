@@ -6,6 +6,10 @@ import { setUser } from "../services/userService";
 import { trainingMenu } from "../bot/flows/trainingMenu";
 import { virtualSpecialistMenu } from "../bot/flows/virtualSpecialistMenu";
 import { virtualSpecialistChat } from "./virtualSpecialistHandler";
+import {
+  getUserTraining,
+  getUserTrainings,
+} from "../services/trainingPlanService";
 
 export async function handleMenu(user: UserDoc, msg: string): Promise<string> {
   const option = msg.trim().toLowerCase();
@@ -199,9 +203,7 @@ export async function handleTrainingMenu(
   const mapping: Record<string, { step: string; question: string }> = {
     "1": {
       step: "see_training_confirm",
-      question:
-        `Ok, ${user.name}! Vou buscar seu treino atual. 👍\n` +
-        `Digite *"sim"* para continuar ou *"0"* para voltar.`,
+      question: await getUserTrainings(user),
     },
     "2": {
       step: "generate_train",
@@ -302,4 +304,55 @@ export async function handleVirtualSpecialistMenu(
   const response = await virtualSpecialistChat(user, msg, media, contentType);
 
   return response;
+}
+
+export async function handleSelectDailyTraining(
+  user: UserDoc,
+  msg: string
+): Promise<string> {
+  const command = msg.trim().toLowerCase();
+
+  const training = await getUserTraining(user.id);
+  if (!training) {
+    await setSession(user.id, { step: "training_menu" });
+    return "Você ainda não tem nenhum treino programado!\n" + trainingMenu();
+  }
+
+  const daysArray = Object.entries(training.week).map(([key, day]) => ({
+    key,
+    ...day,
+  }));
+
+  const selectedIdx = parseInt(command) - 1;
+  if (
+    isNaN(selectedIdx) ||
+    selectedIdx < 0 ||
+    selectedIdx >= daysArray.length
+  ) {
+    return "Opção inválida. Digite o número do treino que deseja ver.";
+  }
+
+  const selectedDay = daysArray[selectedIdx];
+
+  // Monta texto do treino selecionado
+  let trainingText = `📌 Treino: ${selectedDay.name}\n\n`;
+
+  if (selectedDay.exercises.length > 0) {
+    trainingText += "🏋️ *Exercícios*:\n";
+    selectedDay.exercises.forEach((ex, idx) => {
+      trainingText += `   ${idx + 1}. ${ex.name}\n`;
+      trainingText += `      • Séries: ${ex.sets}\n`;
+      trainingText += `      • Repetições: ${ex.reps}\n`;
+      if (ex.restSeconds) {
+        trainingText += `      • Descanso: ${ex.restSeconds}s\n`;
+      }
+      if (ex.notes) trainingText += `      • Obs: ${ex.notes}\n`;
+    });
+  } else {
+    trainingText += "   Nenhum exercício cadastrado.\n";
+  }
+
+  await setSession(user.id, { step: "main_menu" });
+
+  return `${trainingText}\n\n` + mainMenu();
 }

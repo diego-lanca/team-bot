@@ -1,5 +1,6 @@
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { TrainingPlan } from "../models/trainingPlan";
+import { UserDoc } from "../models/user";
 
 const db = getFirestore();
 const trainingsRef = db.collection("trainings");
@@ -36,4 +37,23 @@ export async function setTrainingPlan(
   };
 
   await trainingsRef.doc(docId).set(trainingPlan, { merge: true });
+}
+
+export async function getUserTrainings(user: UserDoc): Promise<string> {
+  const training = await getUserTraining(user.id);
+  if (!training) return "";
+
+  // Converte semana em array para seleção
+  const daysArray = Object.entries(training.week).map(([key, day]) => ({
+    key,
+    ...day,
+  }));
+
+  let msgText = "Escolha o treino que deseja ver:\n";
+  daysArray.forEach((day, idx) => {
+    msgText += `${idx + 1}. ${day.name}\n`;
+  });
+  msgText += "\nDigite o número do treino desejado ou 0 para voltar.";
+
+  return msgText;
 }

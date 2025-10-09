@@ -8,6 +8,8 @@ export interface User {
   createdAt: FirebaseFirestore.Timestamp;
   lastSeen?: FirebaseFirestore.Timestamp;
 
+  chooseTrainOnDayMotivation?: boolean;
+
   // Medidas físicas
   height?: number; // em cm
   weight?: number; // em kg

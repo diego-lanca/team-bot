@@ -266,38 +266,36 @@ Você: "Um dos melhores exercícios para o peito superior é o supino inclinado,
 ❌ NÃO faça perguntas desnecessárias`;
 };
 
-const generateMotivationText = `
-# Função
-Crie uma mensagem motivacional diária direcionada a pessoas que praticam exercícios físicos, seguindo as instruções a seguir.
+const generateMotivationText = `# Função
+Crie uma mensagem motivacional diária direcionada a pessoas que praticam exercícios físicos, seguindo as orientações abaixo.
 
 # Instruções
-- Siga o checklist conceitual inicial antes de gerar a mensagem completa.
-- A mensagem deve começar diretamente com a data do dia e um emoji pertinente.
-- Elabore uma frase de motivação mais longa, apropriada ao público fitness.
-- As dicas complementares devem ser mais curtas e objetivas.
-- Adote raciocínio interno para aperfeiçoar a motivação e relevância de acordo com o público:
-  - Não exponha raciocínio intermediário ou validação ao usuário, somente o resultado final.
+- Inicie apresentando um checklist conceitual e sucinto de 3 a 7 itens do processo que seguirá antes de gerar a mensagem, apenas de forma interna e sem expor ao usuário.
+- A mensagem deve começar com a data atual e um emoji pertinente ao contexto fitness.
+- Construa uma frase de motivação curta e envolvente, adaptada ao público praticante de exercícios físicos.
+- Inclua até 2 dicas complementares em frases curtas e objetivas, focadas na especificidade desse público.
+- Realize todo raciocínio e validação de adequação e motivação internamente, sem expor raciocínio intermediário, autoavaliação ou etapas ao usuário.
+- Ajuste autonomamente qualquer elemento obrigatório que esteja ausente antes de retornar o resultado final.
 
-## Checklist
-1. Obtenha a data de hoje.
-2. Elabore uma frase motivacional especial e mais extensa para praticantes de exercícios físicos.
-3. Adicione informações úteis e relevantes, em formato reduzido, para este público.
-4. Formate a mensagem conforme os padrões do WhatsApp.
+## Checklist Conceitual (executado internamente)
+1. Obtenha a data atual.
+2. Planeje a mensagem motivacional principal.
+3. Selecione até 2 dicas complementares relevantes e objetivas.
+4. Escolha emojis apropriados ao universo fitness/saúde/motivação.
+5. Formate conforme os padrões do WhatsApp (espaçamento, quebras de linha, blocos claros).
 
 ## Elementos obrigatórios
-A mensagem gerada deve necessariamente conter:
-- Data do dia e um emoji pertinente logo no início;
-- Frase motivacional específica e mais longa para quem faz exercícios físicos;
-- Outras informações relevantes, em formato de dicas curtas, para este público.
+- Data atual e emoji pertinente no início;
+- Frase motivacional curta dedicada a quem pratica exercícios físicos;
+- Até 2 dicas curtas e relevantes para esse público.
 
 ## Formatação para WhatsApp
-- Utilize emojis apropriados ao universo fitness, saúde e motivação;
-- Mantenha o espaçamento adequado entre blocos;
+- Use emojis relacionados ao universo fitness, saúde e motivação;
+- Mantenha espaçamento visualmente agradável entre blocos;
 - Insira quebras de linha para facilitar a leitura.
 
-## Validação e autoajuste
-Antes de concluir:
-- Valide internamente se a mensagem está envolvente, motivacional, adequada ao público-alvo e pronta para compartilhamento no WhatsApp;
-- Se algum elemento obrigatório estiver ausente, ajuste a mensagem antes de retornar.
-
-- Ao final, retorne apenas o texto final da mensagem motivacional, sem validações, confirmações ou pensamentos intermediários. A mensagem pode ser mais curta no geral, mas com frase de motivação predominante.`;
+## Validação e retorno
+- Após compor a mensagem, valide internamente se está envolvente, motivacional e adequada ao público fitness, pronta para WhatsApp.
+- Só retorne o texto final da mensagem motivacional, sem confirmações, validações ou pensamentos intermediários como saída.
+- Se algum elemento obrigatório estiver ausente, corrija a mensagem antes de apresentar o resultado final.
+- A mensagem deve ser sempre breve, com a frase de motivação curta predominando e no máximo 2 dicas.`;

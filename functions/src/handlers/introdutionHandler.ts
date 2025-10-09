@@ -19,7 +19,7 @@ import { parseAge } from "../utils/utils";
 export function handleIntrodutionOptions(): Record<
   string,
   (user: UserDoc, msg: string) => Promise<string>
-  > {
+> {
   return {
     welcome: handleAskName,
     ask_age: handleAskAge,
@@ -61,7 +61,7 @@ export async function handleAskAge(
   msg: string
 ): Promise<string> {
   const age = parseAge(msg);
-  if (age === null || (age < 12 && age > 100)) {
+  if (age === null || age < 12 || age > 100) {
     return "Por favor, digite um número válido para a sua idade.";
   }
 
@@ -94,8 +94,17 @@ export async function handleAskHeight(
   user: UserDoc,
   msg: string
 ): Promise<string> {
-  const height = parseFloat(msg.replace(",", "."));
-  if (isNaN(height)) return "Digite sua altura em metros. Ex: 1.75";
+  const cleanText = msg.trim().replace(",", ".");
+
+  if (!/^\d+(\.\d+)?$/.test(cleanText)) {
+    return "Digite uma altura válida em metros. Ex: 1.75";
+  }
+
+  const height = parseFloat(cleanText);
+
+  if (height < 0.5 || height > 2.5) {
+    return "Altura fora do intervalo válido (entre 0.5 m e 2.5 m).";
+  }
 
   await setUser(user.id, { height });
   await setSession(user.id, { step: "ask_weight" });
@@ -106,8 +115,17 @@ export async function handleAskWeight(
   user: UserDoc,
   msg: string
 ): Promise<string> {
-  const weight = parseFloat(msg.replace(",", "."));
-  if (isNaN(weight)) return "Digite seu peso em kg. Ex: 70";
+  const cleanText = msg.trim().replace(",", ".");
+
+  if (!/^\d+(\.\d+)?$/.test(cleanText)) {
+    return "Digite um peso válida em kilos. Ex: 75";
+  }
+
+  const weight = parseFloat(cleanText);
+
+  if (weight < 20 || weight > 300) {
+    return "Peso fora do intervalo válido (entre 20kg e 300kg).";
+  }
 
   await setUser(user.id, { weight });
   await setSession(user.id, { step: "ask_bodyfat" });
@@ -126,12 +144,16 @@ export async function handleAskBodyFat(
     return askGoal();
   }
 
-  const bodyFatPercentage = parseFloat(msg.replace(",", ".").replace("%", ""));
-  if (isNaN(bodyFatPercentage)) {
-    return (
-      "Digite sua gordura corporal em porcentagem. (Ex: 82.1)\n" +
-      "Ou digite *0* para não informar."
-    );
+  const cleanText = msg.trim().replace(",", ".");
+
+  if (!/^\d+(\.\d+)?$/.test(cleanText)) {
+    return "Digite uma porcentagem válida de gordura corporal. Ex: 18.5";
+  }
+
+  const bodyFatPercentage = parseFloat(cleanText);
+
+  if (bodyFatPercentage < 2 || bodyFatPercentage > 70) {
+    return "Percentual de gordura fora do intervalo válido (entre 2% e 70%).";
   }
 
   await setUser(user.id, { bodyFatPercentage });
@@ -154,7 +176,7 @@ export async function handleAskGoal(
     4: "Saúde geral",
   };
 
-  if (isNaN(goal) || (goal < 1 && goal > 4)) {
+  if (isNaN(goal) || goal < 1 || goal > 4) {
     return "Digite uma das opções enviadas.";
   }
 
@@ -179,7 +201,7 @@ export async function handleAskActivityLevel(
     4: "Intenso",
   };
 
-  if (isNaN(activityLevel) || (activityLevel < 1 && activityLevel > 4)) {
+  if (isNaN(activityLevel) || activityLevel < 1 || activityLevel > 4) {
     return "Digite uma das opções enviadas.";
   }
 

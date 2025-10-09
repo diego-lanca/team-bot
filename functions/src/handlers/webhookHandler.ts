@@ -7,8 +7,12 @@ import { generateDayMotivation } from "../services/openAiService";
 import { UserDoc } from "../models/user";
 import { sendMessage } from "../services/twilioService";
 import PromisePool from "@supercharge/promise-pool";
-import { getUserTraining } from "../services/trainingPlanService";
+import {
+  getUserTraining,
+  getUserTrainings,
+} from "../services/trainingPlanService";
 import { getUserTodayTrain } from "./trainingMenuHandler";
+import { setSession } from "../services/firestoreService";
 // import { sendMessage } from "../services/twilioService";
 
 // Função onMessage
@@ -38,7 +42,7 @@ export const onMessage = onRequest(
         MediaContentType0
       );
 
-      await sendMessage(userPhone, reply);
+      // await sendMessage(userPhone, reply);
 
       res.status(200).send(reply);
     } catch (err) {
@@ -48,10 +52,43 @@ export const onMessage = onRequest(
   }
 );
 
+export const testSendDayMotivation = onRequest(
+  { timeoutSeconds: 1200, region: "southamerica-east1" },
+  async () => {
+    const dayMotivation: string = await generateDayMotivation();
+
+    const users: UserDoc[] = await getUsersWithTermsAccepted();
+
+    await PromisePool.withConcurrency(3)
+      .for(users)
+      .process(async (user) => {
+        let message = dayMotivation + "\n";
+
+        const training = await getUserTraining(user.id);
+
+        if (!training) await setSession(user.id, { step: "main_menu" });
+
+        if (training) {
+          if (!user.chooseTrainOnDayMotivation) {
+            message += getUserTodayTrain(training);
+            await setSession(user.id, { step: "main_menu" });
+          } else {
+            message += await getUserTrainings(user);
+            await setSession(user.id, { step: "select_daily_training" });
+          }
+        }
+
+        await sendMessage(user.phone, message);
+      });
+
+    console.log("Day motivation sended");
+  }
+);
+
 export const generateAndSendDayMotivation = onSchedule(
   {
     region: "southamerica-east1",
-    schedule: "every day 06:00", // ou "0 3 * * *" (CRON padrão)
+    schedule: "every day 06:00",
     timeZone: "America/Sao_Paulo",
   },
   async () => {
@@ -65,7 +102,15 @@ export const generateAndSendDayMotivation = onSchedule(
         let message = dayMotivation + "\n";
 
         const training = await getUserTraining(user.id);
-        if (training) message += getUserTodayTrain(training);
+        if (training) {
+          if (!user.chooseTrainOnDayMotivation) {
+            message += getUserTodayTrain(training);
+            await setSession(user.id, { step: "main_menu" });
+          } else {
+            message += await getUserTrainings(user);
+            await setSession(user.id, { step: "select_daily_training" });
+          }
+        }
 
         await sendMessage(user.phone, message);
       });

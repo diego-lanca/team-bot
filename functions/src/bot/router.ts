@@ -8,6 +8,7 @@ import {
   handleEditName,
   handleMenu,
   handleProfileMenu,
+  handleSelectDailyTraining,
   handleTrainingMenu,
   handleVirtualSpecialistMenu,
 } from "../handlers/stepHandler";
@@ -41,6 +42,7 @@ export async function route(
     main_menu: handleMenu,
     profile_menu: handleProfileMenu,
     training_menu: handleTrainingMenu,
+    select_daily_training: handleSelectDailyTraining,
     virtual_specialist_menu: handleVirtualSpecialistMenu,
     edit_name: handleEditName,
     edit_age: handleEditAge,
