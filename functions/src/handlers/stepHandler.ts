@@ -234,7 +234,7 @@ export async function handleTrainingMenu(
     },
     "3": {
       step: "see_weekly_training_confirm",
-      question: (await getWeeklyUserTrainings(user)) + trainingMenu(),
+      question: (await getWeeklyUserTrainings(user)) + "\n\n" + trainingMenu(),
     },
     "0": {
       step: "main_menu",

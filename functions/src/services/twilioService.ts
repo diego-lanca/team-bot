@@ -10,25 +10,49 @@ export async function sendMessage(to: string, body: string): Promise<void> {
     HX7ee867afe41d6ad43796d4645744f412: true,
   };
 
-  // Verifica se o body corresponde a alguma chave do contentSidMapping
+  const MAX_LENGTH = 1500;
   const hasContentSid = Object.prototype.hasOwnProperty.call(
     contentSidMapping,
     body
   );
 
-  const message = hasContentSid
-    ? {
+  // Função interna para dividir mensagens longas
+  const splitMessage = (text: string, limit: number): string[] => {
+    const parts: string[] = [];
+    let start = 0;
+    while (start < text.length) {
+      parts.push(text.substring(start, start + limit));
+      start += limit;
+    }
+    return parts;
+  };
+
+  // Se for contentSid, envia direto
+  if (hasContentSid) {
+    await client.messages.create({
       from: env.TWILIO_FROM,
       to,
       contentSid: body,
-    }
-    : {
+    });
+    return;
+  }
+
+  // Se for texto, divide se necessário
+  const messages =
+    body.length > MAX_LENGTH ? splitMessage(body, MAX_LENGTH) : [body];
+
+  for (let i = 0; i < messages.length; i++) {
+    const text =
+      messages.length > 1
+        ? `(${i + 1}/${messages.length})\n${messages[i]}`
+        : messages[i];
+
+    await client.messages.create({
       from: env.TWILIO_FROM,
       to,
-      body,
-    };
-
-  await client.messages.create(message);
+      body: text,
+    });
+  }
 }
 
 export async function scheduleMessage(
