@@ -75,27 +75,21 @@ export async function getWeeklyUserTrainings(user: UserDoc): Promise<string> {
   }
 
   // Monta texto formatado
-  let trainingText = `📅 *Todos os Treinos*\n`;
+  let trainingText = `📅 *Treinos da Semana*\n`;
 
   for (const [_, dayTraining] of Object.entries(weekTraining)) {
     if (dayTraining.exercises.length > 0) {
-      trainingText += `📌 Treino: ${dayTraining.name}\n\n🏋️ *Exercícios*:\n`;
+      trainingText += `\n🏋️ *${dayTraining.name}*\n`;
       dayTraining.exercises.forEach((ex, idx) => {
-        trainingText += `   ${idx + 1}. ${ex.name}\n`;
-        trainingText += `      • Séries: ${ex.sets}\n`;
-        trainingText += `      • Repetições: ${ex.reps}\n`;
-        if (ex.restSeconds) {
-          trainingText += `      • Descanso: ${ex.restSeconds}s\n`;
-        }
-        if (ex.notes) {
-          trainingText += `      • Obs: ${ex.notes}\n`;
-        }
+        let line = `${idx + 1}. ${ex.name} (${ex.sets}x${ex.reps}`;
+        if (ex.restSeconds) line += ` • ${ex.restSeconds}s`;
+        line += `)`;
+        if (ex.notes) line += ` – ${ex.notes}`;
+        trainingText += `\n${line}`;
       });
     } else {
-      trainingText += "   Nenhum exercício cadastrado.";
+      trainingText += `\n🏋️ *${dayTraining.name}*: Nenhum exercício.`;
     }
-
-    trainingText += "\n";
   }
 
   return trainingText;
