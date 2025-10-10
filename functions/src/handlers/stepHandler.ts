@@ -359,8 +359,10 @@ export async function handleSelectDailyTraining(
     trainingText += "🏋️ *Exercícios*:\n";
     selectedDay.exercises.forEach((ex, idx) => {
       trainingText += `   ${idx + 1}. ${ex.name}\n`;
-      trainingText += `      • Séries: ${ex.sets}\n`;
-      trainingText += `      • Repetições: ${ex.reps}\n`;
+      if (ex.sets) trainingText += `      • Séries: ${ex.sets}\n`;
+      if (ex.reps) trainingText += `      • Repetições: ${ex.reps}\n`;
+      if (ex.tempo_min) trainingText += `      • Tempo: ${ex.tempo_min} mins\n`;
+      if (ex.tempo_seg) trainingText += `      • Tempo: ${ex.tempo_seg} segs\n`;
       if (ex.restSeconds) {
         trainingText += `      • Descanso: ${ex.restSeconds}s\n`;
       }

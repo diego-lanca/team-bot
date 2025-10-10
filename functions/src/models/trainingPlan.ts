@@ -25,8 +25,10 @@ export interface DayTraining {
 
 export interface Exercise {
   name: string; // "Supino Reto"
-  sets: number; // 4
-  reps: string; // "8–12"
+  sets?: number; // 4
+  reps?: string; // "8–12"
+  tempo_min?: string;
+  tempo_seg?: string;
   restSeconds?: number; // 90
   notes?: string;
 }
@@ -54,12 +56,21 @@ export function convertToTrainingPlan(json: any, userId: string): TrainingPlan {
     week[key] = {
       name: dia.foco,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      exercises: dia.exercicios.map((ex: any) => ({
-        name: ex.nome,
-        sets: ex.series,
-        reps: ex.repeticoes,
-        restSeconds: ex.descanso_seg,
-      })),
+      exercises: dia.exercicios.map((ex: any) => {
+        const cleaned: Exercise = {
+          name: ex.nome,
+        };
+
+        if (ex.series !== undefined) cleaned.sets = ex.series;
+        if (ex.repeticoes !== undefined) cleaned.reps = ex.repeticoes;
+        if (ex.tempo_min !== undefined) cleaned.tempo_min = ex.tempo_min;
+        if (ex.tempo_seg !== undefined) cleaned.tempo_seg = ex.tempo_seg;
+        if (ex.descanso_seg !== undefined) {
+          cleaned.restSeconds = ex.descanso_seg;
+        }
+
+        return cleaned;
+      }),
     };
   }
 

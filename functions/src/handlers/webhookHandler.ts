@@ -45,12 +45,16 @@ export const onMessage = onRequest(
         MediaContentType0
       );
 
-      await sendMessage(userPhone, reply);
+      await sendMessage(userPhone, reply.msg, reply.mediaUrl);
 
       res.status(200).send(reply);
     } catch (err) {
       console.error("Error processing message:", err);
-      res.status(500).send("Internal Server Error");
+      await sendMessage(
+        userPhone,
+        "Oops! Ocorreu um erro ao processar a mensagem, " + "tente novamente."
+      );
+      res.status(500).send("Internal Server Error: " + err);
     }
   }
 );
@@ -134,20 +138,20 @@ export const generateAndSendDayMotivation = onSchedule(
           if (training) {
             if (!user.chooseTrainOnDayMotivation) {
               const trainingText = getUserTodayTrain(training);
-              const hour = getUserHourTraining(user);
 
-              console.log(
-                `🏋️ Enviando treino automático para ${user.phone} (${hour})`
-              );
+              console.log(`🏋️ Enviando treino automático para ${user.phone})`);
 
-              await scheduleMessage(
-                user.phone,
-                "💪 Bora pro treino de hoje!\n" +
-                  "Nada de deixar pra depois — seu corpo e sua mente vão " +
-                  "te agradecer depois.\n🔥 Só depende de você!" +
-                  trainingText,
-                hour
-              );
+              if (user.trainingHour) {
+                const hour = getUserHourTraining(user);
+                await scheduleMessage(
+                  user.phone,
+                  "💪 Bora pro treino de hoje!\n" +
+                    "Nada de deixar pra depois — seu corpo e sua mente vão " +
+                    "te agradecer depois.\n🔥 Só depende de você!" +
+                    trainingText,
+                  hour
+                );
+              }
 
               await setSession(user.id, { step: "main_menu" });
               message += trainingText;
@@ -166,22 +170,19 @@ export const generateAndSendDayMotivation = onSchedule(
           }
 
           await sendMessage(user.phone, message);
+
           console.log(`✅ Mensagem enviada com sucesso para ${user.phone}`);
-          return { userId: user.id, success: true };
         } catch (err: unknown) {
           console.error(`❌ Erro ao enviar para ${user.phone}:`, err);
-          return {
-            userId: user.id,
-            success: false,
-            error: err instanceof Error ? err.message : String(err),
-          };
+
+          throw new Error(`[${user.phone}] ${err}`);
         }
       });
 
     const end = Date.now();
     console.log("📊 Rotina finalizada.");
     console.log(`⏱️ Tempo total: ${(end - start) / 1000}s`);
-    console.log(`✅ Enviados: ${results.filter((r) => r.success).length}`);
+    console.log(`✅ Enviados: ${results.length}`);
     console.log(`❌ Falharam: ${errors.length}`);
 
     if (errors.length > 0) {

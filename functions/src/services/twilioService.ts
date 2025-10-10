@@ -5,12 +5,22 @@ import { env } from "../config/env";
 
 const client = new Twilio(env.TWILIO_SID, env.TWILIO_AUTH);
 
-export async function sendMessage(to: string, body: string): Promise<void> {
+export async function sendMessage(
+  to: string,
+  body: string,
+  mediaUrl?: string
+): Promise<void> {
   const contentSidMapping: Record<string, boolean> = {
     HX7ee867afe41d6ad43796d4645744f412: true,
   };
 
   const MAX_LENGTH = 1500;
+  const mediaUrls = [];
+
+  if (mediaUrl) {
+    mediaUrls.push(mediaUrl);
+  }
+
   const hasContentSid = Object.prototype.hasOwnProperty.call(
     contentSidMapping,
     body
@@ -33,6 +43,7 @@ export async function sendMessage(to: string, body: string): Promise<void> {
       from: env.TWILIO_FROM,
       to,
       contentSid: body,
+      mediaUrl: mediaUrls,
     });
     return;
   }
@@ -51,6 +62,7 @@ export async function sendMessage(to: string, body: string): Promise<void> {
       from: env.TWILIO_FROM,
       to,
       body: text,
+      mediaUrl: mediaUrls,
     });
   }
 }
@@ -58,7 +70,7 @@ export async function sendMessage(to: string, body: string): Promise<void> {
 export async function scheduleMessage(
   to: string,
   body: string,
-  date: Date
+  date: Date,
 ): Promise<void> {
   await client.messages.create({
     from: env.TWILIO_FROM,

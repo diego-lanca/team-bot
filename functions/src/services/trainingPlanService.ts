@@ -104,10 +104,23 @@ export async function getWeeklyUserTrainings(user: UserDoc): Promise<string> {
     if (dayTraining.exercises.length > 0) {
       trainingText += `\n🏋️ *${dayTraining.name}*\n`;
       dayTraining.exercises.forEach((ex, idx) => {
-        let line = `${idx + 1}. ${ex.name} (${ex.sets}x${ex.reps}`;
-        if (ex.restSeconds) line += ` • ${ex.restSeconds}s`;
-        line += `)`;
+        let line = `${idx + 1}. ${ex.name}`;
+
+        if (ex.sets && ex.reps) {
+          // Exercício de força
+          line += ` (${ex.sets}x${ex.reps}`;
+          if (ex.restSeconds) line += ` • ${ex.restSeconds}s`;
+          line += `)`;
+        } else if (ex.tempo_min || ex.tempo_seg) {
+          // Exercício de tempo
+          const tempoParts = [];
+          if (ex.tempo_min) tempoParts.push(`${ex.tempo_min}min`);
+          if (ex.tempo_seg) tempoParts.push(`${ex.tempo_seg}s`);
+          line += ` (${tempoParts.join(" ")})`;
+        }
+
         if (ex.notes) line += ` – ${ex.notes}`;
+
         trainingText += `\n${line}`;
       });
     } else {
