@@ -8,7 +8,6 @@ import {
 } from "../services/userService";
 import { onSchedule } from "firebase-functions/scheduler";
 import { generateDayMotivation } from "../services/openAiService";
-import { UserDoc } from "../models/user";
 import { scheduleMessage, sendMessage } from "../services/twilioService";
 import PromisePool from "@supercharge/promise-pool";
 import {
@@ -109,42 +108,87 @@ export const generateAndSendDayMotivation = onSchedule(
     timeZone: "America/Sao_Paulo",
   },
   async () => {
-    const dayMotivation: string = await generateDayMotivation();
+    console.log("🚀 Iniciando rotina diária de motivação...");
 
-    const users: UserDoc[] = await getUsersWithTermsAccepted();
+    const start = Date.now();
+    const dayMotivation = await generateDayMotivation();
+    const users = await getUsersWithTermsAccepted();
 
-    await PromisePool.withConcurrency(3)
+    console.log(`📋 ${users.length} usuários com termos aceitos encontrados.`);
+
+    const { results, errors } = await PromisePool.withConcurrency(3)
       .for(users)
       .process(async (user) => {
-        let message = dayMotivation + "\n";
+        const userLog = {
+          id: user.id,
+          phone: user.phone,
+          chooseTrainOnDayMotivation: user.chooseTrainOnDayMotivation,
+        };
 
-        const training = await getUserTraining(user.id);
-        if (training) {
-          let trainingText = "";
+        console.log("➡️ Iniciando envio para usuário:", userLog);
 
-          if (!user.chooseTrainOnDayMotivation) {
-            trainingText += getUserTodayTrain(training);
+        try {
+          let message = dayMotivation + "\n";
+          const training = await getUserTraining(user.id);
 
-            await scheduleMessage(
-              user.phone,
-              "💪 Bora pro treino de hoje!\n" +
-                "Nada de deixar pra depois — seu corpo e sua mente vão " +
-                "te agradecer depois.\n🔥 Só depende de você!" +
-                trainingText,
-              getUserHourTraining(user)
-            );
-            await setSession(user.id, { step: "main_menu" });
+          if (training) {
+            if (!user.chooseTrainOnDayMotivation) {
+              const trainingText = getUserTodayTrain(training);
+              const hour = getUserHourTraining(user);
+
+              console.log(
+                `🏋️ Enviando treino automático para ${user.phone} (${hour})`
+              );
+
+              await scheduleMessage(
+                user.phone,
+                "💪 Bora pro treino de hoje!\n" +
+                  "Nada de deixar pra depois — seu corpo e sua mente vão " +
+                  "te agradecer depois.\n🔥 Só depende de você!" +
+                  trainingText,
+                hour
+              );
+
+              await setSession(user.id, { step: "main_menu" });
+              message += trainingText;
+            } else {
+              console.log(
+                `📖 Usuário ${user.phone} prefere escolher treino manualmente.`
+              );
+              const trainingOptions = await getUserTrainings(user);
+              await setSession(user.id, { step: "select_daily_training" });
+              message += trainingOptions;
+            }
           } else {
-            trainingText += await getUserTrainings(user);
-            await setSession(user.id, { step: "select_daily_training" });
+            console.warn(
+              `⚠️ Nenhum treino encontrado para usuário ${user.phone}`
+            );
           }
 
-          message += trainingText;
+          await sendMessage(user.phone, message);
+          console.log(`✅ Mensagem enviada com sucesso para ${user.phone}`);
+          return { userId: user.id, success: true };
+        } catch (err: unknown) {
+          console.error(`❌ Erro ao enviar para ${user.phone}:`, err);
+          return {
+            userId: user.id,
+            success: false,
+            error: err instanceof Error ? err.message : String(err),
+          };
         }
-
-        await sendMessage(user.phone, message);
       });
 
-    console.log("Day motivation sended");
+    const end = Date.now();
+    console.log("📊 Rotina finalizada.");
+    console.log(`⏱️ Tempo total: ${(end - start) / 1000}s`);
+    console.log(`✅ Enviados: ${results.filter((r) => r.success).length}`);
+    console.log(`❌ Falharam: ${errors.length}`);
+
+    if (errors.length > 0) {
+      console.error("🧾 Detalhes dos erros:");
+      errors.forEach((err: unknown) => console.error(err));
+    }
+
+    console.log("🏁 Day motivation sended.");
   }
 );
