@@ -372,14 +372,16 @@ export async function handleSelectDailyTraining(
 
   await setSession(user.id, { step: "main_menu" });
 
-  await scheduleMessage(
-    user.phone,
-    "💪 Bora pro treino de hoje!\n" +
-      "Nada de deixar pra depois — seu corpo e sua mente vão " +
-      "te agradecer depois.\n🔥 Só depende de você!" +
-      trainingText,
-    getUserHourTraining(user)
-  );
+  if (user.trainingHour) {
+    await scheduleMessage(
+      user.phone,
+      "💪 Bora pro treino de hoje!\n" +
+        "Nada de deixar pra depois — seu corpo e sua mente vão " +
+        "te agradecer depois.\n🔥 Só depende de você!" +
+        trainingText,
+      getUserHourTraining(user)
+    );
+  }
 
   return `${trainingText}\n\n` + mainMenu();
 }
