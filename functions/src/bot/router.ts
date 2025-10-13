@@ -4,8 +4,7 @@ import { UserDoc } from "../models/user";
 import { getSession, setSession } from "../services/firestoreService";
 import { welcome } from "./flows/introduction/welcome";
 import {
-  handleEditAge,
-  handleEditName,
+  handleConfirmDailyMotivation,
   handleMenu,
   handleProfileMenu,
   handleSelectDailyTraining,
@@ -79,7 +78,7 @@ export async function route(
       msg: string,
       media?: string,
       contentType?: string
-    ) => Promise<string>
+    ) => Promise<{ msg: string; mediaUrl?: string }>
   > = {
     ...handleIntrodutionOptions(),
     main_menu: handleMenu,
@@ -87,8 +86,7 @@ export async function route(
     training_menu: handleTrainingMenu,
     select_daily_training: handleSelectDailyTraining,
     virtual_specialist_menu: handleVirtualSpecialistMenu,
-    edit_name: handleEditName,
-    edit_age: handleEditAge,
+    confirm_daily_motivation: handleConfirmDailyMotivation,
     ...handleProfileOptions(),
     ...handleTrainingOptions(),
   };
@@ -100,7 +98,10 @@ export async function route(
   }
 
   const handler = stepHandlers[session.step];
-  if (handler) return { msg: await handler(user, msg, media, contentType) };
+  if (handler) {
+    const handlerResponse = await handler(user, msg, media, contentType);
+    return { msg: handlerResponse.msg, mediaUrl: handlerResponse.mediaUrl };
+  }
 
   if (msg.trim() === "0") {
     await setSession(user.id, { step: "main_menu" });
@@ -109,7 +110,6 @@ export async function route(
 
   return {
     msg:
-      'Desculpa, não entendi. Digite "0" para voltar ao ' +
-      'menu principal ou "ajuda" para ver as opções.',
+      'Desculpa, não entendi. Digite "0" para voltar ao ' + "menu principal.",
   };
 }

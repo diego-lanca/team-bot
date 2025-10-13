@@ -16,7 +16,7 @@ import { sendMessage } from "../services/twilioService";
 
 export function handleTrainingOptions(): Record<
   string,
-  (user: UserDoc, msg: string) => Promise<string>
+  (user: UserDoc, msg: string) => Promise<{ msg: string; mediaUrl?: string }>
   > {
   return {
     see_training_confirm: handleSelectTrainingDay,
@@ -27,18 +27,20 @@ export function handleTrainingOptions(): Record<
 export async function handleSelectTrainingDay(
   user: UserDoc,
   msg: string
-): Promise<string> {
+): Promise<{ msg: string; mediaUrl?: string }> {
   const command = msg.trim().toLowerCase();
 
   if (command === "0") {
     await setSession(user.id, { step: "training_menu" });
-    return trainingMenu();
+    return { msg: trainingMenu() };
   }
 
   const training = await getUserTraining(user.id);
   if (!training) {
     await setSession(user.id, { step: "training_menu" });
-    return "Você ainda não tem nenhum treino programado!\n" + trainingMenu();
+    return {
+      msg: "Você ainda não tem nenhum treino programado!\n" + trainingMenu(),
+    };
   }
 
   const daysArray = Object.entries(training.week).map(([key, day]) => ({
@@ -52,7 +54,7 @@ export async function handleSelectTrainingDay(
     selectedIdx < 0 ||
     selectedIdx >= daysArray.length
   ) {
-    return "Opção inválida. Digite o número do treino que deseja ver.";
+    return { msg: "Opção inválida. Digite o número do treino que deseja ver." };
   }
 
   const selectedDay = daysArray[selectedIdx];
@@ -79,7 +81,7 @@ export async function handleSelectTrainingDay(
 
   await setSession(user.id, { step: "training_menu" });
 
-  return `${trainingText}\n\n` + trainingMenu();
+  return { msg: `${trainingText}\n\n` + trainingMenu() };
 }
 
 export function getUserTodayTrain(training: TrainingPlan): string {
@@ -133,32 +135,34 @@ export function getUserTodayTrain(training: TrainingPlan): string {
 export async function handleGenerateTrainings(
   user: UserDoc,
   msg: string
-): Promise<string> {
+): Promise<{ msg: string; mediaUrl?: string }> {
   const command = msg.trim().toLowerCase();
 
   if (command === "0") {
     await setSession(user.id, { step: "training_menu" });
-    return trainingMenu();
+    return { msg: trainingMenu() };
   }
 
   const days = parseInt(command);
 
   if (days < 1 && days > 7) {
-    return (
-      "Não entendi sua resposta. Por favor, digite um número válido de dias " +
-      'para criar um novo treino ou "0" para voltar.'
-    );
+    return {
+      msg:
+        "Não entendi sua resposta. Por favor, digite um número válido de dias" +
+        ' para criar um novo treino ou "0" para voltar.',
+    };
   }
 
   const requiredInfos = hasRequiredInfos(user);
   if (!requiredInfos) {
     await setSession(user.id, { step: "training_menu" });
-    return (
-      "Você ainda não completou todas as informações " +
-      "necessárias pra gerar um treino.\n\n" +
-      "Vá para a seção de perfil e verifique.\n" +
-      `\n${trainingMenu()}`
-    );
+    return {
+      msg:
+        "Você ainda não completou todas as informações " +
+        "necessárias pra gerar um treino.\n\n" +
+        "Vá para a seção de perfil e verifique.\n" +
+        `\n${trainingMenu()}`,
+    };
   }
 
   await sendMessage(
@@ -173,5 +177,5 @@ export async function handleGenerateTrainings(
   await setTrainingPlan(trainingPlan, user.id);
   await setSession(user.id, { step: "training_menu" });
 
-  return `🚀 Treino novo criado com sucesso!\n\n${trainingMenu()}`;
+  return { msg: `🚀 Treino novo criado com sucesso!\n\n${trainingMenu()}` };
 }

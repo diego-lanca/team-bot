@@ -2,16 +2,19 @@
 
 import { Twilio } from "twilio";
 import { env } from "../config/env";
+import { fromZonedTime } from "date-fns-tz";
 
 const client = new Twilio(env.TWILIO_SID, env.TWILIO_AUTH);
 
 export async function sendMessage(
   to: string,
   body: string,
-  mediaUrl?: string
+  mediaUrl?: string,
+  contentVariables?: string,
 ): Promise<void> {
   const contentSidMapping: Record<string, boolean> = {
     HX7ee867afe41d6ad43796d4645744f412: true,
+    HX6e37ac0dc8ee468f5d91af5bbaa889b8: true,
   };
 
   const MAX_LENGTH = 1500;
@@ -43,6 +46,7 @@ export async function sendMessage(
       from: env.TWILIO_FROM,
       to,
       contentSid: body,
+      contentVariables,
       mediaUrl: mediaUrls,
     });
     return;
@@ -72,11 +76,14 @@ export async function scheduleMessage(
   body: string,
   date: Date,
 ): Promise<void> {
+  const utcDate = fromZonedTime(date, 'America/Sao_Paulo');
+
   await client.messages.create({
     from: env.TWILIO_FROM,
     to,
-    contentSid: body,
+    body,
+    messagingServiceSid: env.TWILIO_MESSAGE_SID,
     scheduleType: "fixed",
-    sendAt: date,
+    sendAt: utcDate,
   });
 }

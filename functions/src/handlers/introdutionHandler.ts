@@ -12,6 +12,7 @@ import { askSex } from "../bot/flows/introduction/askSex";
 import { askTrainingHour } from "../bot/flows/introduction/askTrainingHour";
 import { askWeight } from "../bot/flows/introduction/askWeight";
 import { mainMenu } from "../bot/flows/mainMenu";
+import { env } from "../config/env";
 import { UserDoc } from "../models/user";
 import { setSession } from "../services/firestoreService";
 import { setUser } from "../services/userService";
@@ -19,7 +20,7 @@ import { parseAge } from "../utils/utils";
 
 export function handleIntrodutionOptions(): Record<
   string,
-  (user: UserDoc, msg: string) => Promise<string>
+  (user: UserDoc, msg: string) => Promise<{ msg: string; mediaUrl?: string }>
   > {
   return {
     welcome: handleAskName,
@@ -41,136 +42,139 @@ export function handleIntrodutionOptions(): Record<
 export async function handleAskName(
   user: UserDoc,
   msg: string
-): Promise<string> {
+): Promise<{ msg: string; mediaUrl?: string }> {
   const userName = msg.trim();
 
-  // Verificação do Nome (numero e comprimento)
   if (userName.length < 2 || userName.length > 50 || /^\d+$/.test(userName)) {
-    return (
-      "Hmm, esse nome não parece válido. 🤔\n" +
-      "Por favor, digite um nome real para que a " +
-      "gente possa se conhecer melhor."
-    );
+    return {
+      msg:
+        "Hmm, esse nome não parece válido. 🤔\n" +
+        "Por favor, digite um nome real para que a " +
+        "gente possa se conhecer melhor.",
+    };
   }
 
   await setUser(user.id, { name: userName });
   await setSession(user.id, { step: "ask_age" });
-  return `🙋‍♂️ Nome registrado com sucesso: *${userName}*.\n\n` + askAge();
+  return {
+    msg: `🙋‍♂️ Nome registrado com sucesso: *${userName}*.\n\n${askAge()}`,
+  };
 }
 
 export async function handleAskAge(
   user: UserDoc,
   msg: string
-): Promise<string> {
+): Promise<{ msg: string; mediaUrl?: string }> {
   const age = parseAge(msg);
   if (age === null || age < 12 || age > 100) {
-    return "Por favor, digite um número válido para a sua idade.";
+    return { msg: "Por favor, digite um número válido para a sua idade." };
   }
 
   await setUser(user.id, { age });
   await setSession(user.id, { step: "ask_sex" });
-  return (
-    `🎉 Ótimo! Sua idade foi registrada como *${age}* com sucesso!\n\n` +
-    askSex()
-  );
+  return {
+    msg: `🎉 Ótimo! Sua idade foi registrada como *${age}* com sucesso!\n\n` +
+    askSex(),
+  };
 }
 
 export async function handleAskSex(
   user: UserDoc,
   msg: string
-): Promise<string> {
+): Promise<{ msg: string; mediaUrl?: string }> {
   const sex = msg.trim().toUpperCase();
   if (!["M", "F"].includes(sex)) {
-    return "Por favor, digite M para Masculino ou F para Feminino.";
+    return { msg: "Por favor, digite M para Masculino ou F para Feminino." };
   }
 
   const sexoFormatado = sex === "M" ? "Masculino" : "Feminino";
   await setUser(user.id, { sex });
   await setSession(user.id, { step: "ask_height" });
-  return (
-    `👤 Sexo atualizado para *${sexoFormatado}* com sucesso!\n\n` + askHeight()
-  );
+  return {
+    msg: `👤 Sexo atualizado para *${sexoFormatado}* com sucesso!\n\n` +
+    askHeight(),
+  };
 }
 
 export async function handleAskHeight(
   user: UserDoc,
   msg: string
-): Promise<string> {
+): Promise<{ msg: string; mediaUrl?: string }> {
   const cleanText = msg.trim().replace(",", ".");
-
   if (!/^\d+(\.\d+)?$/.test(cleanText)) {
-    return "Digite uma altura válida em metros. Ex: 1.75";
+    return { msg: "Digite uma altura válida em metros. Ex: 1.75" };
   }
 
   const height = parseFloat(cleanText);
-
   if (height < 0.5 || height > 2.5) {
-    return "Altura fora do intervalo válido (entre 0.5 m e 2.5 m).";
+    return { msg: "Altura fora do intervalo válido (entre 0.5 m e 2.5 m)." };
   }
 
   await setUser(user.id, { height });
   await setSession(user.id, { step: "ask_weight" });
-  return `📏 Altura registrada com sucesso: *${height} m*.\n\n` + askWeight();
+  return {
+    msg: `📏 Altura registrada com sucesso: *${height} m*.\n\n${askWeight()}`,
+  };
 }
 
 export async function handleAskWeight(
   user: UserDoc,
   msg: string
-): Promise<string> {
+): Promise<{ msg: string; mediaUrl?: string }> {
   const cleanText = msg.trim().replace(",", ".");
-
   if (!/^\d+(\.\d+)?$/.test(cleanText)) {
-    return "Digite um peso válida em kilos. Ex: 75";
+    return { msg: "Digite um peso válido em quilos. Ex: 75" };
   }
 
   const weight = parseFloat(cleanText);
-
   if (weight < 20 || weight > 300) {
-    return "Peso fora do intervalo válido (entre 20kg e 300kg).";
+    return { msg: "Peso fora do intervalo válido (entre 20kg e 300kg)." };
   }
 
   await setUser(user.id, { weight });
   await setSession(user.id, { step: "ask_bodyfat" });
-  return (
-    `🏋️‍♂️ Peso registrado com sucesso: *${weight} kg*.\n\n` +
-    askBodyFatPercentage()
-  );
+  return {
+    msg: `🏋️‍♂️ Peso registrado com sucesso: *${weight} kg*.\n\n` +
+    askBodyFatPercentage(),
+  };
 }
 
 export async function handleAskBodyFat(
   user: UserDoc,
   msg: string
-): Promise<string> {
+): Promise<{ msg: string; mediaUrl?: string }> {
   if (msg.trim() == "0") {
     await setSession(user.id, { step: "ask_goal" });
-    return askGoal();
+    return { msg: askGoal() };
   }
 
   const cleanText = msg.trim().replace(",", ".");
-
   if (!/^\d+(\.\d+)?$/.test(cleanText)) {
-    return "Digite uma porcentagem válida de gordura corporal. Ex: 18.5";
+    return {
+      msg: "Digite uma porcentagem válida de gordura corporal. Ex: 18.5",
+    };
   }
 
   const bodyFatPercentage = parseFloat(cleanText);
-
   if (bodyFatPercentage < 2 || bodyFatPercentage > 70) {
-    return "Percentual de gordura fora do intervalo válido (entre 2% e 70%).";
+    return {
+      msg: "Percentual de gordura fora do intervalo válido (entre 2% e 70%).",
+    };
   }
 
   await setUser(user.id, { bodyFatPercentage });
   await setSession(user.id, { step: "ask_goal" });
-  return (
-    `📊 Gordura corporal registrada: *${bodyFatPercentage}%*.\n\n` + askGoal()
-  );
+  return {
+    msg: `📊 Gordura corporal registrada: *${bodyFatPercentage}%*.\n\n` +
+    askGoal(),
+  };
 }
 
 export async function handleAskGoal(
   user: UserDoc,
   msg: string
-): Promise<string> {
+): Promise<{ msg: string; mediaUrl?: string }> {
   const goal = parseInt(msg);
-
   const goalMap: Record<number, string> = {
     1: "Perda de peso",
     2: "Ganho de massa",
@@ -179,23 +183,23 @@ export async function handleAskGoal(
   };
 
   if (isNaN(goal) || goal < 1 || goal > 4) {
-    return "Digite uma das opções enviadas.";
+    return { msg: "Digite uma das opções enviadas." };
   }
 
   await setUser(user.id, { goal });
   await setSession(user.id, { step: "ask_activitylevel" });
-  return (
-    `🏁 Objetivo registrado com sucesso: *${goalMap[goal]}*.\n\n` +
-    askActivityLevel()
-  );
+  return {
+    msg: `🏁 Objetivo registrado com sucesso: *${
+      goalMap[goal]
+    }*.\n\n${askActivityLevel()}`,
+  };
 }
 
 export async function handleAskActivityLevel(
   user: UserDoc,
   msg: string
-): Promise<string> {
+): Promise<{ msg: string; mediaUrl?: string }> {
   const activityLevel = parseInt(msg);
-
   const activityMap: Record<number, string> = {
     1: "Sedentário",
     2: "Leve",
@@ -204,133 +208,132 @@ export async function handleAskActivityLevel(
   };
 
   if (isNaN(activityLevel) || activityLevel < 1 || activityLevel > 4) {
-    return "Digite uma das opções enviadas.";
+    return { msg: "Digite uma das opções enviadas." };
   }
 
   await setUser(user.id, { activityLevel });
   await setSession(user.id, { step: "ask_conditions" });
-  return (
-    `✅ Nível de atividade registrado: *${activityMap[activityLevel]}*.\n\n` +
-    askMedicalConditions()
-  );
+  return {
+    msg: `✅ Nível de atividade registrado: *${
+      activityMap[activityLevel]
+    }*.\n\n${askMedicalConditions()}`,
+  };
 }
 
 export async function handleAskConditions(
   user: UserDoc,
   msg: string
-): Promise<string> {
+): Promise<{ msg: string; mediaUrl?: string }> {
   if (msg.trim() == "0") {
     await setSession(user.id, { step: "ask_injuries" });
-    return askInjuries();
+    return { msg: askInjuries() };
   }
-  const medicalConditions = msg.split(",");
 
+  const medicalConditions = msg.split(",");
   if (medicalConditions.length === 0) {
-    return (
-      "Digite ao menos uma condição médica. " +
-      "(ex: Diabetes, Hipertensão), ou *0* para nenhuma."
-    );
+    return {
+      msg: "Digite ao menos uma condição médica. " +
+      "(ex: Diabetes, Hipertensão), ou *0* para nenhuma.",
+    };
   }
 
   await setUser(user.id, { medicalConditions });
-  await setSession(user.id, { step: "profile_menu" });
-  return (
-    `📝 Condições médicas registradas: *${medicalConditions.join(", ")}*.\n\n` +
-    askInjuries()
-  );
+  await setSession(user.id, { step: "ask_injuries" });
+  return {
+    msg: `📝 Condições médicas registradas: *${medicalConditions.join(
+      ", "
+    )}*.\n\n${askInjuries()}`,
+  };
 }
 
 export async function handleAskInjuries(
   user: UserDoc,
   msg: string
-): Promise<string> {
+): Promise<{ msg: string; mediaUrl?: string }> {
   if (msg.trim() == "0") {
     await setSession(user.id, { step: "ask_medications" });
-    return askMedications();
+    return { msg: askMedications() };
   }
-  const injuries = msg.split(",");
 
+  const injuries = msg.split(",");
   if (injuries.length === 0) {
-    return (
-      "Digite ao menos um membro lesionado: " +
-      "(ex: Ombro esquerdo, Mão direita), ou *0* para nenhuma."
-    );
+    return {
+      msg: "Digite ao menos um membro lesionado: " +
+      "(ex: Ombro esquerdo, Mão direita), ou *0* para nenhuma.",
+    };
   }
 
   await setUser(user.id, { injuries });
   await setSession(user.id, { step: "ask_medications" });
-  return (
-    `🤕 Lesões registradas: *${injuries.join(", ")}*.\n\n` + askMedications()
-  );
+  return {
+    msg: `🤕 Lesões registradas: *${injuries.join(
+      ", "
+    )}*.\n\n${askMedications()}`,
+  };
 }
 
 export async function handleAskMedications(
   user: UserDoc,
   msg: string
-): Promise<string> {
+): Promise<{ msg: string; mediaUrl?: string }> {
   if (msg.trim() == "0") {
     await setSession(user.id, { step: "ask_training_hour" });
-    return askTrainingHour();
+    return { msg: askTrainingHour() };
   }
-  const medications = msg.split(",");
 
+  const medications = msg.split(",");
   if (medications.length === 0) {
-    return (
-      "Digite ao menos uma medicação: " +
-      "(ex: Insulina, Anti-inflamatório), ou *0* para nenhuma."
-    );
+    return {
+      msg: "Digite ao menos uma medicação: " +
+      "(ex: Insulina, Anti-inflamatório), ou *0* para nenhuma.",
+    };
   }
 
   await setUser(user.id, { medications });
   await setSession(user.id, { step: "ask_training_hour" });
-  return (
-    `💊 Medicamentos registrados: *${medications.join(", ")}*.\n\n` +
-    askTrainingHour()
-  );
+  return {
+    msg: `💊 Medicamentos registrados: *${medications.join(
+      ", "
+    )}*.\n\n${askTrainingHour()}`,
+  };
 }
 
 export async function handleAskTrainingHour(
   user: UserDoc,
   msg: string
-): Promise<string> {
+): Promise<{ msg: string; mediaUrl?: string }> {
   const response = msg.trim();
   const [hourString, minutesString] = response.split(":");
 
   if (!hourString || !minutesString) {
-    return "Insira um horário no formado válido (ex: 17:30)";
+    return { msg: "Insira um horário no formato válido (ex: 17:30)" };
   }
 
   const hour = parseInt(hourString);
   const minutes = parseInt(minutesString);
 
-  console.log(typeof hour);
-  console.log(typeof minutes);
-
   if (Number.isNaN(hour) || Number.isNaN(minutes)) {
-    return "Insira um horário com números válidos (ex: 17:30)";
+    return { msg: "Insira um horário com números válidos (ex: 17:30)" };
   }
 
   if (hour < 0 || hour > 24 || minutes < 0 || minutes > 59) {
-    return "Insira um horário existente (ex: 17:30)";
+    return { msg: "Insira um horário existente (ex: 17:30)" };
   }
 
   await setUser(user.id, { trainingHour: `${hour}:${minutes}` });
-
   await setSession(user.id, { step: "ask_terms" });
-  return `HX7ee867afe41d6ad43796d4645744f412`;
+  return { msg: `HX7ee867afe41d6ad43796d4645744f412` };
 }
 
 export async function handleAskAcceptTerms(
   user: UserDoc,
   msg: string
-): Promise<string> {
+): Promise<{ msg: string; mediaUrl?: string }> {
   const response = msg.trim().toLowerCase();
-
   if (response.includes("aceito")) {
     await setUser(user.id, { acceptedTerms: true });
   }
 
   await setSession(user.id, { step: "main_menu" });
-
-  return mainMenu();
+  return { msg: mainMenu(), mediaUrl: env.TEAMBOT_LOGO_URL };
 }

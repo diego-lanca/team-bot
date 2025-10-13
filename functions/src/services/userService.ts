@@ -1,5 +1,6 @@
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { UserDoc, User } from "../models/user";
+import { getUserTraining } from "./trainingPlanService";
 
 const db = getFirestore();
 const usersRef = db.collection("users");
@@ -36,6 +37,16 @@ export async function getUsersWithTermsAccepted(): Promise<UserDoc[]> {
   return users;
 }
 
+export async function getUsersWithTermsAndTrain(): Promise<UserDoc[]> {
+  const users = await getUsersWithTermsAccepted();
+
+  return users.filter(async (u) => {
+    const userTrain = await getUserTraining(u.id);
+
+    return userTrain !== null;
+  });
+}
+
 export async function getUserByPhone(phone: string): Promise<UserDoc | null> {
   const snapshot = await usersRef.where("phone", "==", phone).limit(1).get();
   if (snapshot.empty) return null;
@@ -47,7 +58,7 @@ export async function getUserByPhone(phone: string): Promise<UserDoc | null> {
 
 export function getUserHourTraining(user: UserDoc): Date {
   const now = new Date();
-  const [hourString, minutesString] = user.trainingHour!.split(':');
+  const [hourString, minutesString] = user.trainingHour!.split(":");
 
   const hours = parseInt(hourString);
   const minutes = parseInt(minutesString);
@@ -62,6 +73,7 @@ export function getUserHourTraining(user: UserDoc): Date {
 
   return hourDate;
 }
+
 
 export async function setUser(
   userId: string,

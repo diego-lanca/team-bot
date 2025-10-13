@@ -1,6 +1,6 @@
 {
   "name": "team-bot",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "",
   "scripts": {
     "emulators": "firebase emulators:start"
@@ -20,5 +20,8 @@
   "devDependencies": {
     "concurrently": "^9.2.1",
     "nodemon": "^3.1.10"
+  },
+  "dependencies": {
+    "date-fns-tz": "^3.2.0"
   }
 }

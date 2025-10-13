@@ -2,7 +2,7 @@ import { mainMenu } from "../bot/flows/mainMenu";
 import { profileMenu } from "../bot/flows/profileMenu";
 import { UserDoc } from "../models/user";
 import { setSession } from "../services/firestoreService";
-import { getUserHourTraining, setUser } from "../services/userService";
+import { getUserHourTraining } from "../services/userService";
 import { trainingMenu } from "../bot/flows/trainingMenu";
 import { virtualSpecialistMenu } from "../bot/flows/virtualSpecialistMenu";
 import { virtualSpecialistChat } from "./virtualSpecialistHandler";
@@ -12,47 +12,49 @@ import {
   getWeeklyUserTrainings,
 } from "../services/trainingPlanService";
 import { scheduleMessage } from "../services/twilioService";
+import { getUserTodayTrain } from "./trainingMenuHandler";
+import { env } from "../config/env";
 
-export async function handleMenu(user: UserDoc, msg: string): Promise<string> {
+export async function handleMenu(
+  user: UserDoc,
+  msg: string
+): Promise<{ msg: string; mediaUrl?: string }> {
   const option = msg.trim().toLowerCase();
 
+  if (option === "0") {
+    return { msg: mainMenu(), mediaUrl: env.TEAMBOT_LOGO_URL };
+  }
+
   const mapping: Record<string, { step: string; text: string }> = {
-    "1": {
-      step: "training_menu",
-      text: trainingMenu(),
-    },
-    // "2": {
-    //   step: "nutrition_menu",
-    //   text: "Você escolheu: Plano Alimentar.",
-    // },
-    "2": {
-      step: "virtual_specialist_menu",
-      text: virtualSpecialistMenu(),
-    },
-    "3": {
-      step: "profile_menu",
-      text: profileMenu(),
-    },
+    "1": { step: "training_menu", text: trainingMenu() },
+    "2": { step: "virtual_specialist_menu", text: virtualSpecialistMenu() },
+    "3": { step: "profile_menu", text: profileMenu() },
   };
 
   const choice = mapping[option] || mapping[msg.toLowerCase()];
   if (!choice) {
-    return (
-      "Opção inválida. Por favor, digite um número de 1 a 3.\n\n" + mainMenu()
-    );
+    return {
+      msg:
+        "Opção inválida. Por favor, digite um número de 1 a 3.\n\n" +
+        mainMenu(),
+      mediaUrl: env.TEAMBOT_LOGO_URL,
+    };
   }
 
   await setSession(user.id, { step: choice.step });
-  return choice.text;
+  return { msg: choice.text };
 }
 
 export async function handleProfileMenu(
   user: UserDoc,
   msg: string
-): Promise<string> {
+): Promise<{ msg: string; mediaUrl?: string }> {
   const option = msg.trim();
 
-  const mapping: Record<string, { step: string; question: string }> = {
+  const mapping: Record<
+    string,
+    { step: string; question: string; mediaUrl?: string }
+  > = {
     "1": {
       step: "edit_name",
       question: `📝 Nome atual: ${
@@ -134,17 +136,15 @@ export async function handleProfileMenu(
       }Liste medicamentos em uso ou *0* pra cancelar:`,
     },
     "12": {
-      step: "edit_training_preference", // Novo passo na conversa
+      step: "edit_training_preference",
       question:
         "Você prefere receber seu treino diário de que forma?\n\n" +
-        "1️⃣ *Automática*: Eu te envio o treino específico do dia " +
-        "(ex: Treino A).\n" +
-        "2️⃣ *Manual*: Eu te envio as opções e você escolhe qual treinar" +
-        " (ex: A, B ou C).\n\n" +
+        "1️⃣ *Automática*: Eu te envio o treino específico do dia.\n" +
+        "2️⃣ *Manual*: Você escolhe qual treino (A, B ou C).\n\n" +
         "Digite *1* ou *2* (ou *0* para voltar).",
     },
     "13": {
-      step: "edit_training_hour", // Novo passo na conversa
+      step: "edit_training_hour",
       question:
         "⏰ Qual é o seu *horário preferido* para treinar?\n\n" +
         "Digite no formato *HH:MM* (ex: *17:30*).\n\n" +
@@ -154,73 +154,27 @@ export async function handleProfileMenu(
     "0": {
       step: "main_menu",
       question: mainMenu(),
+      mediaUrl: env.TEAMBOT_LOGO_URL,
     },
   };
 
   const choice = mapping[option];
-  if (!choice) return "Opção inválida. Digite um número de 1 a 12.";
+  if (!choice) return { msg: "Opção inválida. Digite um número de 1 a 12." };
 
   await setSession(user.id, { step: choice.step });
-  return choice.question;
-}
-
-export async function handleEditName(
-  user: UserDoc,
-  msg: string
-): Promise<string> {
-  if (msg.trim() == "0") {
-    await setSession(user.id, { step: "profile_menu" });
-    return profileMenu();
-  }
-
-  const newName = msg.trim();
-
-  if (!newName) {
-    return "Nome inválido. Por favor, digite um nome válido.";
-  }
-
-  await setUser(user.id, { name: newName });
-
-  await setSession(user.id, { step: "profile_menu" });
-
-  return (
-    `✅ Nome atualizado para *${newName}*! ` +
-    'Digite "0" para voltar ao menu principal.'
-  );
-}
-
-export async function handleEditAge(
-  user: UserDoc,
-  msg: string
-): Promise<string> {
-  if (msg.trim() == "0") {
-    await setSession(user.id, { step: "profile_menu" });
-    return profileMenu();
-  }
-
-  const newAge = parseInt(msg.trim(), 10);
-
-  if (isNaN(newAge) || newAge < 10 || newAge > 100) {
-    return "Idade inválida. Por favor, digite apenas números (ex: 30).";
-  }
-
-  await setUser(user.id, { age: newAge });
-
-  await setSession(user.id, { step: "profile_menu" });
-
-  return (
-    `✅ Idade atualizada para *${newAge} anos*! ` +
-    'Digite "0" para voltar ao menu principal.'
-  );
+  return { msg: choice.question, mediaUrl: choice.mediaUrl };
 }
 
 export async function handleTrainingMenu(
   user: UserDoc,
   msg: string
-): Promise<string> {
+): Promise<{ msg: string; mediaUrl?: string }> {
   const option = msg.trim().match(/\d+/)?.[0] || "";
 
-  const mapping: Record<string, { step: string; question: string }> = {
+  const mapping: Record<
+    string,
+    { step: string; question: string; mediaUrl?: string }
+  > = {
     "1": {
       step: "see_training_confirm",
       question: await getUserTrainings(user),
@@ -228,9 +182,9 @@ export async function handleTrainingMenu(
     "2": {
       step: "generate_train",
       question:
-        `Legal! Para criar um treino perfeito para você, me diga: ` +
+        `Legal! Para criar um treino perfeito, me diga: ` +
         `*quantos dias na semana você pretende treinar?* 🤔\n\n` +
-        `Por favor, digite um número de 1 a 7. (ou "0" para voltar)`,
+        `Digite um número de 1 a 7 (ou "0" para voltar).`,
     },
     "3": {
       step: "training_menu",
@@ -239,6 +193,7 @@ export async function handleTrainingMenu(
     "0": {
       step: "main_menu",
       question: mainMenu(),
+      mediaUrl: env.TEAMBOT_LOGO_URL,
     },
   };
 
@@ -248,92 +203,91 @@ export async function handleTrainingMenu(
     const validOptions = Object.keys(mapping)
       .map((key) => `"${key}"`)
       .join(", ");
-    return (
-      `Opção inválida, ${user.name}. Por favor, ` +
-      `escolha uma das opções disponíveis: ${validOptions}.`
-    );
+    return {
+      msg:
+        `Opção inválida, ${user.name}. Por favor, ` +
+        `escolha uma das opções: ${validOptions}.`,
+    };
   }
 
   await setSession(user.id, { step: choice.step });
-  return choice.question;
+  return { msg: choice.question, mediaUrl: choice.mediaUrl };
 }
-
-// export async function handleNutritionMenu(
-//   user: UserDoc,
-//   msg: string
-// ): Promise<string> {
-//   const option = msg.trim().match(/\d+/)?.[0] || "";
-
-//   const mapping: Record<string, { step: string; question: string }> = {
-//     "1": {
-//       step: "see_daily_plan_confirm",
-//       question:
-//         `Ok, ${user.name}! Vou buscar seu plano alimentar de hoje. 👍\n` +
-//         `Posso continuar? Digite "sim" para confirmar.`,
-//     },
-//     "2": {
-//       step: "see_weekly_plan_confirm",
-//       question:
-//         `Certo! Preparando para exibir o plano da semana toda. 📅\n` +
-//         `Podemos prosseguir? Digite "sim" para confirmar.`,
-//     },
-//     "3": {
-//       step: "see_substitutions_confirm",
-//       question:
-//         `Boa! Vou carregar a lista de substituições de alimentos. 🥦\n` +
-//         `Confirma? Digite "sim".`,
-//     },
-//     "0": {
-//       step: "main_menu",
-//       question: mainMenu(),
-//     },
-//   };
-
-//   const choice = mapping[option];
-
-//   if (!choice) {
-//     const validOptions = Object.keys(mapping)
-//       .map((key) => `"${key}"`)
-//       .join(", ");
-//     return (
-//       `Opção inválida, ${user.name}.` +
-//       `Por favor, escolha uma das opções disponíveis: ${validOptions}.`
-//     );
-//   }
-
-//   await setSession(user.id, { step: choice.step });
-
-//   return choice.question;
-// }
 
 export async function handleVirtualSpecialistMenu(
   user: UserDoc,
   msg: string,
   media?: string,
   contentType?: string
-): Promise<string> {
+): Promise<{ msg: string; mediaUrl?: string }> {
   const command = parseInt(msg.trim());
 
   if (command === 0) {
     await setSession(user.id, { step: "main_menu" });
-    return mainMenu();
+    return { msg: mainMenu(), mediaUrl: env.TEAMBOT_LOGO_URL };
   }
 
   const response = await virtualSpecialistChat(user, msg, media, contentType);
+  return { msg: response };
+}
 
-  return response;
+export async function handleConfirmDailyMotivation(
+  user: UserDoc,
+  msg: string
+): Promise<{ msg: string; mediaUrl?: string }> {
+  const command = msg.trim().toLowerCase();
+
+  if (command.includes("não")) {
+    await setSession(user.id, { step: "main_menu" });
+    return { msg: mainMenu(), mediaUrl: env.TEAMBOT_LOGO_URL };
+  }
+
+  const training = await getUserTraining(user.id);
+
+  if (!user.chooseTrainOnDayMotivation) {
+    const trainingText = getUserTodayTrain(training!);
+
+    if (user.trainingHour) {
+      const hour = getUserHourTraining(user);
+
+      await scheduleMessage(
+        user.phone,
+        "💪 Bora pro treino de hoje!\n" +
+          "Nada de deixar pra depois — " +
+          "seu corpo e sua mente vão te agradecer.\n🔥" +
+          trainingText,
+        hour
+      );
+    }
+
+    await setSession(user.id, { step: "main_menu" });
+    return {
+      msg: trainingText + "\nDigite *0* pra ver as opções do menu principal.",
+    };
+  } else {
+    const trainingOptions = await getUserTrainings(user);
+    await setSession(user.id, { step: "select_daily_training" });
+    return { msg: trainingOptions };
+  }
 }
 
 export async function handleSelectDailyTraining(
   user: UserDoc,
   msg: string
-): Promise<string> {
+): Promise<{ msg: string; mediaUrl?: string }> {
   const command = msg.trim().toLowerCase();
+
+  if (command === "0") {
+    await setSession(user.id, { step: "main_menu" });
+    return { msg: mainMenu(), mediaUrl: env.TEAMBOT_LOGO_URL };
+  }
 
   const training = await getUserTraining(user.id);
   if (!training) {
     await setSession(user.id, { step: "training_menu" });
-    return "Você ainda não tem nenhum treino programado!\n" + trainingMenu();
+    return {
+      msg: "Você ainda não tem nenhum treino programado!\n" + trainingMenu(),
+    };
   }
 
   const daysArray = Object.entries(training.week).map(([key, day]) => ({
@@ -347,12 +301,10 @@ export async function handleSelectDailyTraining(
     selectedIdx < 0 ||
     selectedIdx >= daysArray.length
   ) {
-    return "Opção inválida. Digite o número do treino que deseja ver.";
+    return { msg: "Opção inválida. Digite o número do treino que deseja ver." };
   }
 
   const selectedDay = daysArray[selectedIdx];
-
-  // Monta texto do treino selecionado
   let trainingText = `📌 Treino: ${selectedDay.name}\n\n`;
 
   if (selectedDay.exercises.length > 0) {
@@ -372,18 +324,22 @@ export async function handleSelectDailyTraining(
     trainingText += "   Nenhum exercício cadastrado.\n";
   }
 
-  await setSession(user.id, { step: "main_menu" });
-
   if (user.trainingHour) {
+    const userHour = getUserHourTraining(user);
     await scheduleMessage(
       user.phone,
       "💪 Bora pro treino de hoje!\n" +
-        "Nada de deixar pra depois — seu corpo e sua mente vão " +
-        "te agradecer depois.\n🔥 Só depende de você!" +
-        trainingText,
-      getUserHourTraining(user)
+      "Nada de deixar pra depois — " +
+      "seu corpo e sua mente vão te agradecer.\n🔥" +
+      trainingText,
+      userHour
     );
   }
 
-  return `${trainingText}\n\n` + mainMenu();
+  await setSession(user.id, { step: "main_menu" });
+
+  return {
+    msg:
+      `${trainingText}` + "\nDigite *0* pra ver as opções do menu principal.",
+  };
 }

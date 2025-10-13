@@ -29,6 +29,7 @@ admin.initializeApp();
 
 export {
   onMessage,
+  testSendDayMotivation,
   generateAndSendDayMotivation,
 } from "./handlers/webhookHandler";
 

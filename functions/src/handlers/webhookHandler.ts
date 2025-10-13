@@ -1,20 +1,10 @@
 // import { sendMessage } from "../services/twilioService";
 import { route } from "../bot/router";
 import { onRequest } from "firebase-functions/v2/https";
-import {
-  fetchUser,
-  getUserHourTraining,
-  getUsersWithTermsAccepted,
-} from "../services/userService";
+import { fetchUser, getUsersWithTermsAndTrain } from "../services/userService";
 import { onSchedule } from "firebase-functions/scheduler";
-import { generateDayMotivation } from "../services/openAiService";
-import { scheduleMessage, sendMessage } from "../services/twilioService";
+import { sendMessage } from "../services/twilioService";
 import PromisePool from "@supercharge/promise-pool";
-import {
-  getUserTraining,
-  getUserTrainings,
-} from "../services/trainingPlanService";
-import { getUserTodayTrain } from "./trainingMenuHandler";
 import { setSession } from "../services/firestoreService";
 // import { sendMessage } from "../services/twilioService";
 
@@ -59,66 +49,19 @@ export const onMessage = onRequest(
   }
 );
 
-// export const testSendDayMotivation = onRequest(
-//   { timeoutSeconds: 1200, region: "southamerica-east1" },
-//   async (req, res) => {
-//     const dayMotivation: string = await generateDayMotivation();
-
-//     const users: UserDoc[] = await getUsersWithTermsAccepted();
-
-//     console.log(users.length);
-
-//     await PromisePool.withConcurrency(3)
-//       .for(users)
-//       .process(async (user) => {
-//         let message = dayMotivation + "\n";
-
-//         const training = await getUserTraining(user.id);
-//         if (training) {
-//           let trainingText = "";
-//           if (!user.chooseTrainOnDayMotivation) {
-//             trainingText += getUserTodayTrain(training);
-//             await scheduleMessage(
-//               user.phone,
-//               "💪 Bora pro treino de hoje!\n" +
-//                 "Nada de deixar pra depois — seu corpo e sua mente vão " +
-//                 "te agradecer depois.\n🔥 Só depende de você!" +
-//                 trainingText,
-//               getUserHourTraining(user)
-//             );
-//             await setSession(user.id, { step: "main_menu" });
-//           } else {
-//             trainingText += await getUserTrainings(user);
-//             await setSession(user.id, { step: "select_daily_training" });
-//           }
-
-//           message += trainingText;
-//           console.log(message);
-//           console.log(user.name);
-//         }
-
-//         await sendMessage(user.phone, message);
-//       });
-
-//     console.log("Day motivation sended");
-//     res.status(200).send();
-//   }
-// );
-
-export const generateAndSendDayMotivation = onSchedule(
-  {
-    region: "southamerica-east1",
-    schedule: "every day 06:00",
-    timeZone: "America/Sao_Paulo",
-  },
-  async () => {
+export const testSendDayMotivation = onRequest(
+  { timeoutSeconds: 1200, region: "southamerica-east1" },
+  async (req, res) => {
     console.log("🚀 Iniciando rotina diária de motivação...");
 
     const start = Date.now();
-    const dayMotivation = await generateDayMotivation();
-    const users = await getUsersWithTermsAccepted();
+    const dateFormatted = new Intl.DateTimeFormat("pt-BR").format(start);
 
-    console.log(`📋 ${users.length} usuários com termos aceitos encontrados.`);
+    const users = await getUsersWithTermsAndTrain();
+
+    console.log(
+      `📋 ${users.length} usuários com treinos e termos aceitos encontrados.`
+    );
 
     const { results, errors } = await PromisePool.withConcurrency(3)
       .for(users)
@@ -130,47 +73,79 @@ export const generateAndSendDayMotivation = onSchedule(
         };
 
         console.log("➡️ Iniciando envio para usuário:", userLog);
-
         try {
-          let message = dayMotivation + "\n";
-          const training = await getUserTraining(user.id);
+          await setSession(user.id, { step: "confirm_daily_motivation" });
 
-          if (training) {
-            if (!user.chooseTrainOnDayMotivation) {
-              const trainingText = getUserTodayTrain(training);
+          await sendMessage(
+            user.phone,
+            "HX6e37ac0dc8ee468f5d91af5bbaa889b8",
+            "",
+            // eslint-disable-next-line max-len
+            `{"1":"${user.name}","2":"${dateFormatted}"}`
+          );
 
-              console.log(`🏋️ Enviando treino automático para ${user.phone})`);
+          console.log(`✅ Mensagem enviada com sucesso para ${user.phone}`);
+        } catch (err: unknown) {
+          console.error(`❌ Erro ao enviar para ${user.phone}:`, err);
 
-              if (user.trainingHour) {
-                const hour = getUserHourTraining(user);
-                await scheduleMessage(
-                  user.phone,
-                  "💪 Bora pro treino de hoje!\n" +
-                    "Nada de deixar pra depois — seu corpo e sua mente vão " +
-                    "te agradecer depois.\n🔥 Só depende de você!" +
-                    trainingText,
-                  hour
-                );
-              }
+          throw new Error(`[${user.phone}] ${err}`);
+        }
+      });
 
-              await setSession(user.id, { step: "main_menu" });
-              message += trainingText;
-            } else {
-              console.log(
-                `📖 Usuário ${user.phone} prefere escolher treino manualmente.`
-              );
-              const trainingOptions = await getUserTrainings(user);
-              await setSession(user.id, { step: "select_daily_training" });
-              message += trainingOptions;
-            }
-          } else {
-            console.warn(
-              `⚠️ Nenhum treino encontrado para usuário ${user.phone}`
-            );
-          }
+    const end = Date.now();
+    console.log("📊 Rotina finalizada.");
+    console.log(`⏱️ Tempo total: ${(end - start) / 1000}s`);
+    console.log(`✅ Enviados: ${results.length}`);
+    console.log(`❌ Falharam: ${errors.length}`);
 
-          await sendMessage(user.phone, message);
+    if (errors.length > 0) {
+      console.error("🧾 Detalhes dos erros:");
+      errors.forEach((err: unknown) => console.error(err));
+    }
 
+    console.log("🏁 Day motivation sended.");
+
+    res.status(200).send('done');
+  }
+);
+
+export const generateAndSendDayMotivation = onSchedule(
+  {
+    region: "southamerica-east1",
+    schedule: "every day 06:00",
+    timeZone: "America/Sao_Paulo",
+  },
+  async () => {
+    console.log("🚀 Iniciando rotina diária de motivação...");
+
+    const start = Date.now();
+    const dateFormatted = new Intl.DateTimeFormat("pt-BR").format(start);
+
+    const users = await getUsersWithTermsAndTrain();
+
+    console.log(
+      `📋 ${users.length} usuários com treinos e termos aceitos encontrados.`
+    );
+
+    const { results, errors } = await PromisePool.withConcurrency(3)
+      .for(users)
+      .process(async (user) => {
+        const userLog = {
+          id: user.id,
+          phone: user.phone,
+          chooseTrainOnDayMotivation: user.chooseTrainOnDayMotivation,
+        };
+
+        console.log("➡️ Iniciando envio para usuário:", userLog);
+        try {
+          await sendMessage(
+            user.phone,
+            "HX6e37ac0dc8ee468f5d91af5bbaa889b8",
+            "",
+            `{"1":"${user.name}","2":"${dateFormatted}"}`
+          );
+
+          await setSession(user.id, { step: "confirm_daily_motivation" });
           console.log(`✅ Mensagem enviada com sucesso para ${user.phone}`);
         } catch (err: unknown) {
           console.error(`❌ Erro ao enviar para ${user.phone}:`, err);
