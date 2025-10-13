@@ -248,16 +248,21 @@ export async function handleConfirmDailyMotivation(
     const trainingText = getUserTodayTrain(training!);
 
     if (user.trainingHour) {
-      const hour = getUserHourTraining(user);
+      const now = new Date();
+      const userHour = getUserHourTraining(user);
 
-      await scheduleMessage(
-        user.phone,
-        "💪 Bora pro treino de hoje!\n" +
-          "Nada de deixar pra depois — " +
-          "seu corpo e sua mente vão te agradecer.\n🔥" +
-          trainingText,
-        hour
-      );
+      const diff = userHour.getTime() - now.getTime();
+
+      if (diff > 5 * 60 * 1000) {
+        await scheduleMessage(
+          user.phone,
+          "💪 Bora pro treino de hoje!\n" +
+            "Nada de deixar pra depois — " +
+            "seu corpo e sua mente vão te agradecer.\n🔥" +
+            trainingText,
+          userHour
+        );
+      }
     }
 
     await setSession(user.id, { step: "main_menu" });
@@ -325,15 +330,21 @@ export async function handleSelectDailyTraining(
   }
 
   if (user.trainingHour) {
+    const now = new Date();
     const userHour = getUserHourTraining(user);
-    await scheduleMessage(
-      user.phone,
-      "💪 Bora pro treino de hoje!\n" +
-      "Nada de deixar pra depois — " +
-      "seu corpo e sua mente vão te agradecer.\n🔥" +
-      trainingText,
-      userHour
-    );
+
+    const diff = userHour.getTime() - now.getTime();
+
+    if (diff > 5 * 60 * 1000) {
+      await scheduleMessage(
+        user.phone,
+        "💪 Bora pro treino de hoje!\n" +
+          "Nada de deixar pra depois — " +
+          "seu corpo e sua mente vão te agradecer.\n🔥" +
+          trainingText,
+        userHour
+      );
+    }
   }
 
   await setSession(user.id, { step: "main_menu" });
