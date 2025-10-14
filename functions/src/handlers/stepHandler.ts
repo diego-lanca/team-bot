@@ -188,7 +188,11 @@ export async function handleTrainingMenu(
     },
     "3": {
       step: "training_menu",
-      question: (await getWeeklyUserTrainings(user)) + "\n\n" + trainingMenu(),
+      question:
+        (await getWeeklyUserTrainings(user)) +
+        "❓ *Em caso de dúvidas, fale com um dos instrutores!* 💬" +
+        +"\n\n" +
+        trainingMenu(),
     },
     "0": {
       step: "main_menu",

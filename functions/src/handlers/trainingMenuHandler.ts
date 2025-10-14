@@ -83,8 +83,8 @@ export async function handleSelectTrainingDay(
 
   return {
     msg:
-      `${trainingText}\n\n` +
-      "❓ *Em caso de dúvidas, fale com um dos instrutores!* 💬" +
+      `${trainingText}\n` +
+      "❓ *Em caso de dúvidas, fale com um dos instrutores!* 💬\n\n" +
       trainingMenu(),
   };
 }
