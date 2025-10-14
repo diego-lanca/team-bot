@@ -164,6 +164,51 @@ export const generateTrain = async (
   return JSON.parse(response.output_text);
 };
 
+export const generateHomeTrain = async (
+  user: User,
+  days: number
+): Promise<object> => {
+  const response = await openai.responses.create({
+    model: "gpt-5-nano",
+    input: [
+      {
+        role: "developer",
+        content: [
+          {
+            type: "input_text",
+            text: env.GENERATE_HOME_TRAIN_TEXT,
+          },
+        ],
+      },
+      {
+        role: "user",
+        content: [
+          {
+            type: "input_text",
+            text: generateUserPrompt(user, days),
+          },
+        ],
+      },
+    ],
+    text: {
+      format: {
+        type: "json_object",
+      },
+      verbosity: "medium",
+    },
+    reasoning: {
+      effort: "medium",
+    },
+    tools: [],
+    store: true,
+    include: ["reasoning.encrypted_content"],
+  });
+
+  console.log(response.output_text);
+
+  return JSON.parse(response.output_text);
+};
+
 const generateUserPrompt = (user: User, days: number): string => {
   if (!user.weight || !user.height) {
     throw new Error("Peso e altura são obrigatórios para gerar o treino.");
