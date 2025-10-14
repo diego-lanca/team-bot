@@ -1,6 +1,7 @@
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { UserDoc, User } from "../models/user";
 import { getUserTraining } from "./trainingPlanService";
+import { getSubscription } from "./firestoreService";
 
 const db = getFirestore();
 const usersRef = db.collection("users");
@@ -42,8 +43,9 @@ export async function getUsersWithTermsAndTrain(): Promise<UserDoc[]> {
 
   return users.filter(async (u) => {
     const userTrain = await getUserTraining(u.id);
+    const subscription = await getSubscription(u.id);
 
-    return userTrain !== null;
+    return userTrain !== null && subscription?.status == "active";
   });
 }
 
@@ -73,7 +75,6 @@ export function getUserHourTraining(user: UserDoc): Date {
 
   return hourDate;
 }
-
 
 export async function setUser(
   userId: string,

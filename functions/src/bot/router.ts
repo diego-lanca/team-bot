@@ -74,16 +74,16 @@ export async function route(
       status: "active",
       updatedAt: Timestamp.fromDate(new Date()),
     });
-  }
-
-  if (subscription?.status !== "active") {
-    return {
-      msg:
-        "⚠️ Olá! Seu plano não está ativo no momento, por isso o " +
-        "bot está temporariamente indisponível. " +
-        "Assim que o pagamento for confirmado, " +
-        "tudo volta a funcionar normalmente 😊",
-    };
+  } else {
+    if (subscription.status !== "active") {
+      return {
+        msg:
+          "⚠️ Olá! Seu plano não está ativo no momento, por isso o " +
+          "bot está temporariamente indisponível. " +
+          "Assim que o pagamento for confirmado, " +
+          "tudo volta a funcionar normalmente 😊",
+      };
+    }
   }
 
   const session = await getSession(user.id);

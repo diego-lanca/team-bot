@@ -259,7 +259,9 @@ export async function handleConfirmDailyMotivation(
           "💪 Bora pro treino de hoje!\n" +
             "Nada de deixar pra depois — " +
             "seu corpo e sua mente vão te agradecer.\n🔥" +
-            trainingText,
+            trainingText +
+            "\n" +
+            "❓ *Em caso de dúvidas, fale com um dos instrutores!* 💬",
           userHour
         );
       }
@@ -341,7 +343,9 @@ export async function handleSelectDailyTraining(
         "💪 Bora pro treino de hoje!\n" +
           "Nada de deixar pra depois — " +
           "seu corpo e sua mente vão te agradecer.\n🔥" +
-          trainingText,
+          trainingText +
+          "\n" +
+          "❓ *Em caso de dúvidas, fale com um dos instrutores!* 💬",
         userHour
       );
     }

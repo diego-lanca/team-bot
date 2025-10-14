@@ -81,7 +81,12 @@ export async function handleSelectTrainingDay(
 
   await setSession(user.id, { step: "training_menu" });
 
-  return { msg: `${trainingText}\n\n` + trainingMenu() };
+  return {
+    msg:
+      `${trainingText}\n\n` +
+      "❓ *Em caso de dúvidas, fale com um dos instrutores!* 💬" +
+      trainingMenu(),
+  };
 }
 
 export function getUserTodayTrain(training: TrainingPlan): string {
@@ -129,7 +134,11 @@ export function getUserTodayTrain(training: TrainingPlan): string {
     trainingText += "   Nenhum exercício cadastrado.\n";
   }
 
-  return trainingText;
+  return (
+    trainingText +
+    "\n\n" +
+    "❓ *Em caso de dúvidas, fale com um dos instrutores!* 💬"
+  );
 }
 
 export async function handleGenerateTrainings(
