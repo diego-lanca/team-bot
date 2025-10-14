@@ -1,7 +1,12 @@
 // Roteamento de mensagens
 import { differenceInDays } from "date-fns";
 import { UserDoc } from "../models/user";
-import { getSession, setSession } from "../services/firestoreService";
+import {
+  getSession,
+  getSubscription,
+  setSession,
+  upsertSubscription,
+} from "../services/firestoreService";
 import { welcome } from "./flows/introduction/welcome";
 import {
   handleConfirmDailyMotivation,
@@ -16,6 +21,7 @@ import { handleTrainingOptions } from "../handlers/trainingMenuHandler";
 import { mainMenu } from "./flows/mainMenu";
 import { handleIntrodutionOptions } from "../handlers/introdutionHandler";
 import { env } from "../config/env";
+import { Timestamp } from "firebase-admin/firestore";
 
 export const MAIN_MENU_GREETINGS = [
   "oi",
@@ -60,6 +66,26 @@ export async function route(
   media?: string,
   contentType?: string
 ): Promise<{ msg: string; mediaUrl?: string }> {
+  const subscription = await getSubscription(user.id);
+  if (subscription === null) {
+    await upsertSubscription(user.id, {
+      userId: user.id,
+      createdAt: Timestamp.fromDate(new Date()),
+      status: "active",
+      updatedAt: Timestamp.fromDate(new Date()),
+    });
+  }
+
+  if (subscription?.status !== "active") {
+    return {
+      msg:
+        "⚠️ Olá! Seu plano não está ativo no momento, por isso o " +
+        "bot está temporariamente indisponível. " +
+        "Assim que o pagamento for confirmado, " +
+        "tudo volta a funcionar normalmente 😊",
+    };
+  }
+
   const session = await getSession(user.id);
 
   if (!session) {
