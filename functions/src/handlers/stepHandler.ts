@@ -14,6 +14,7 @@ import {
 import { scheduleMessage } from "../services/twilioService";
 import { getUserTodayTrain } from "./trainingMenuHandler";
 import { env } from "../config/env";
+import { trainingHome } from "../bot/flows/trainingHome";
 
 export async function handleMenu(
   user: UserDoc,
@@ -27,8 +28,9 @@ export async function handleMenu(
 
   const mapping: Record<string, { step: string; text: string }> = {
     "1": { step: "training_menu", text: trainingMenu() },
-    "2": { step: "virtual_specialist_menu", text: virtualSpecialistMenu() },
-    "3": { step: "profile_menu", text: profileMenu() },
+    "2": { step: "training_home", text: trainingHome() },
+    "3": { step: "virtual_specialist_menu", text: virtualSpecialistMenu() },
+    "4": { step: "profile_menu", text: profileMenu() },
   };
 
   const choice = mapping[option] || mapping[msg.toLowerCase()];
@@ -215,6 +217,60 @@ export async function handleTrainingMenu(
   }
 
   await setSession(user.id, { step: choice.step });
+  return { msg: choice.question, mediaUrl: choice.mediaUrl };
+}
+
+export async function handleTrainingHome(
+  user: UserDoc,
+  msg: string
+): Promise<{ msg: string; mediaUrl?: string }> {
+  const option = msg.trim().match(/\d+/)?.[0] || "";
+
+  const mapping: Record<
+    string,
+    { step: string; question: string; mediaUrl?: string }
+  > = {
+    "1": {
+      step: "see_home_training_confirm",
+      question: await getUserHomeTrainings(user),
+    },
+    "2": {
+      step: "generate_home_train",
+      question:
+        `Legal! Para criar um treino perfeito para fazer em casa, me diga: ` +
+        `*quantos dias na semana você pretende treinar?* 🤔\n\n` +
+        `Digite um número de 1 a 7 (ou "0" para voltar).`,
+    },
+    "3": {
+      step: "training_home_menu",
+      question:
+        (await getWeeklyUserHomeTrainings(user)) +
+        "❓ *Em caso de dúvidas, fale com um dos instrutores!* 💬" +
+        +"\n\n" +
+        trainingHome(),
+    },
+    "0": {
+      step: "main_menu",
+      question: mainMenu(),
+      mediaUrl: env.TEAMBOT_LOGO_URL,
+    },
+  };
+
+  const choice = mapping[option];
+
+  if (!choice) {
+    const validOptions = Object.keys(mapping)
+      .map((key) => `"${key}"`)
+      .join(", ");
+    return {
+      msg:
+        `Opção inválida, ${user.name}. Por favor, ` +
+        `escolha uma das opções: ${validOptions}.`,
+    };
+  }
+
+  await setSession(user.id, { step: choice.step });
+
   return { msg: choice.question, mediaUrl: choice.mediaUrl };
 }
 
