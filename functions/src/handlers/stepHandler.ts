@@ -15,6 +15,10 @@ import { scheduleMessage } from "../services/twilioService";
 import { getUserTodayTrain } from "./trainingMenuHandler";
 import { env } from "../config/env";
 import { trainingHome } from "../bot/flows/trainingHome";
+import {
+  getUserHomeTrainings,
+  getWeeklyUserHomeTrainings,
+} from "../services/homeTrainingService";
 
 export async function handleMenu(
   user: UserDoc,
@@ -28,7 +32,7 @@ export async function handleMenu(
 
   const mapping: Record<string, { step: string; text: string }> = {
     "1": { step: "training_menu", text: trainingMenu() },
-    "2": { step: "training_home", text: trainingHome() },
+    "2": { step: "home_training_menu", text: trainingHome() },
     "3": { step: "virtual_specialist_menu", text: virtualSpecialistMenu() },
     "4": { step: "profile_menu", text: profileMenu() },
   };
@@ -220,7 +224,7 @@ export async function handleTrainingMenu(
   return { msg: choice.question, mediaUrl: choice.mediaUrl };
 }
 
-export async function handleTrainingHome(
+export async function handleHomeTraining(
   user: UserDoc,
   msg: string
 ): Promise<{ msg: string; mediaUrl?: string }> {
@@ -242,7 +246,7 @@ export async function handleTrainingHome(
         `Digite um número de 1 a 7 (ou "0" para voltar).`,
     },
     "3": {
-      step: "training_home_menu",
+      step: "home_training_menu",
       question:
         (await getWeeklyUserHomeTrainings(user)) +
         "❓ *Em caso de dúvidas, fale com um dos instrutores!* 💬" +

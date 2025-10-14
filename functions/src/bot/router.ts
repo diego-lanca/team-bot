@@ -10,6 +10,7 @@ import {
 import { welcome } from "./flows/introduction/welcome";
 import {
   handleConfirmDailyMotivation,
+  handleHomeTraining,
   handleMenu,
   handleProfileMenu,
   handleSelectDailyTraining,
@@ -22,6 +23,7 @@ import { mainMenu } from "./flows/mainMenu";
 import { handleIntrodutionOptions } from "../handlers/introdutionHandler";
 import { env } from "../config/env";
 import { Timestamp } from "firebase-admin/firestore";
+import { handleHomeTrainingOptions } from "../handlers/homeTrainingHandler";
 
 export const MAIN_MENU_GREETINGS = [
   "oi",
@@ -110,11 +112,13 @@ export async function route(
     main_menu: handleMenu,
     profile_menu: handleProfileMenu,
     training_menu: handleTrainingMenu,
+    home_training_menu: handleHomeTraining,
     select_daily_training: handleSelectDailyTraining,
     virtual_specialist_menu: handleVirtualSpecialistMenu,
     confirm_daily_motivation: handleConfirmDailyMotivation,
     ...handleProfileOptions(),
     ...handleTrainingOptions(),
+    ...handleHomeTrainingOptions(),
   };
 
   const daysDiff = differenceInDays(new Date(), session.updatedAt.toDate());
