@@ -17,7 +17,7 @@ import { homeTrainingMenu } from "../bot/flows/homeTrainingMenu";
 export function handleHomeTrainingOptions(): Record<
   string,
   (user: UserDoc, msg: string) => Promise<{ msg: string; mediaUrl?: string }>
-> {
+  > {
   return {
     see_home_training_confirm: handleSelectHomeTrainingDay,
     generate_home_train: handleGenerateHomeTrainings,

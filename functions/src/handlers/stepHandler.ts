@@ -395,11 +395,19 @@ async function getUserDailyTrain(
       ? await getUserTraining(user.id)
       : await getUserHomeTraining(user.id);
 
+  if (training === null) {
+    await setSession(user.id, { step: "main_menu" });
+    return (
+      "Você não tem nenhum treino cadastrado pra essa modalidade!\n" +
+      "\nDigite *0* pra ver as opções do menu principal."
+    );
+  }
+
   if (!user.chooseTrainOnDayMotivation) {
     const trainingText =
       type === "pro"
-        ? getUserTodayTrain(training!)
-        : getUserTodayHomeTrain(training!);
+        ? getUserTodayTrain(training)
+        : getUserTodayHomeTrain(training);
 
     if (user.trainingHour) {
       const now = new Date();
