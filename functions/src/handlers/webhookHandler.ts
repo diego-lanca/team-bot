@@ -49,65 +49,65 @@ export const onMessage = onRequest(
   }
 );
 
-export const testSendDayMotivation = onRequest(
-  { timeoutSeconds: 1200, region: "southamerica-east1" },
-  async (req, res) => {
-    console.log("🚀 Iniciando rotina diária de motivação...");
+// export const testSendDayMotivation = onRequest(
+//   { timeoutSeconds: 1200, region: "southamerica-east1" },
+//   async (req, res) => {
+//     console.log("🚀 Iniciando rotina diária de motivação...");
 
-    const start = Date.now();
-    const dateFormatted = new Intl.DateTimeFormat("pt-BR").format(start);
+//     const start = Date.now();
+//     const dateFormatted = new Intl.DateTimeFormat("pt-BR").format(start);
 
-    const users = await getUsersWithTermsAndTrain();
+//     const users = await getUsersWithTermsAndTrain();
 
-    console.log(
-      `📋 ${users.length} usuários com treinos e termos aceitos encontrados.`
-    );
+//     console.log(
+//       `📋 ${users.length} usuários com treinos e termos aceitos encontrados.`
+//     );
 
-    const { results, errors } = await PromisePool.withConcurrency(3)
-      .for(users)
-      .process(async (user) => {
-        const userLog = {
-          id: user.id,
-          phone: user.phone,
-          chooseTrainOnDayMotivation: user.chooseTrainOnDayMotivation,
-        };
+//     const { results, errors } = await PromisePool.withConcurrency(3)
+//       .for(users)
+//       .process(async (user) => {
+//         const userLog = {
+//           id: user.id,
+//           phone: user.phone,
+//           chooseTrainOnDayMotivation: user.chooseTrainOnDayMotivation,
+//         };
 
-        console.log("➡️ Iniciando envio para usuário:", userLog);
-        try {
-          await setSession(user.id, { step: "confirm_daily_motivation" });
+//         console.log("➡️ Iniciando envio para usuário:", userLog);
+//         try {
+//           await setSession(user.id, { step: "confirm_daily_motivation" });
 
-          await sendMessage(
-            user.phone,
-            "HX6e37ac0dc8ee468f5d91af5bbaa889b8",
-            "",
-            // eslint-disable-next-line max-len
-            `{"1":"${user.name}","2":"${dateFormatted}"}`
-          );
+//           await sendMessage(
+//             user.phone,
+//             "HX6e37ac0dc8ee468f5d91af5bbaa889b8",
+//             "",
+//             // eslint-disable-next-line max-len
+//             `{"1":"${user.name}","2":"${dateFormatted}"}`
+//           );
 
-          console.log(`✅ Mensagem enviada com sucesso para ${user.phone}`);
-        } catch (err: unknown) {
-          console.error(`❌ Erro ao enviar para ${user.phone}:`, err);
+//           console.log(`✅ Mensagem enviada com sucesso para ${user.phone}`);
+//         } catch (err: unknown) {
+//           console.error(`❌ Erro ao enviar para ${user.phone}:`, err);
 
-          throw new Error(`[${user.phone}] ${err}`);
-        }
-      });
+//           throw new Error(`[${user.phone}] ${err}`);
+//         }
+//       });
 
-    const end = Date.now();
-    console.log("📊 Rotina finalizada.");
-    console.log(`⏱️ Tempo total: ${(end - start) / 1000}s`);
-    console.log(`✅ Enviados: ${results.length}`);
-    console.log(`❌ Falharam: ${errors.length}`);
+//     const end = Date.now();
+//     console.log("📊 Rotina finalizada.");
+//     console.log(`⏱️ Tempo total: ${(end - start) / 1000}s`);
+//     console.log(`✅ Enviados: ${results.length}`);
+//     console.log(`❌ Falharam: ${errors.length}`);
 
-    if (errors.length > 0) {
-      console.error("🧾 Detalhes dos erros:");
-      errors.forEach((err: unknown) => console.error(err));
-    }
+//     if (errors.length > 0) {
+//       console.error("🧾 Detalhes dos erros:");
+//       errors.forEach((err: unknown) => console.error(err));
+//     }
 
-    console.log("🏁 Day motivation sended.");
+//     console.log("🏁 Day motivation sended.");
 
-    res.status(200).send('done');
-  }
-);
+//     res.status(200).send('done');
+//   }
+// );
 
 export const generateAndSendDayMotivation = onSchedule(
   {

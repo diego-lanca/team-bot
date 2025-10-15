@@ -369,9 +369,17 @@ export async function handleConfirmDailyMotivation(
 ): Promise<{ msg: string; mediaUrl?: string }> {
   const command = msg.trim().toLowerCase();
 
-  if (command.includes("não")) {
+  if (command.includes("não") || command === "0") {
     await setSession(user.id, { step: "main_menu" });
     return { msg: mainMenu(), mediaUrl: env.TEAMBOT_LOGO_URL };
+  }
+
+  if (!command.includes("sim")) {
+    return {
+      msg:
+        "Por favor, responda apenas uma das opções enviadas!\n" +
+        "Ou *0* caso queira ir direto ao *Menu Principal*",
+    };
   }
 
   // 👉 Agora sempre pergunta qual tipo de treino o usuário quer
@@ -543,7 +551,8 @@ export async function handleSelectDailyHomeTraining(
   if (!training) {
     await setSession(user.id, { step: "home_training_menu" });
     return {
-      msg: "Você ainda não tem nenhum treino programado!\n" + trainingMenu(),
+      msg:
+        "Você ainda não tem nenhum treino programado!\n" + homeTrainingMenu(),
     };
   }
 
