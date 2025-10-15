@@ -13,12 +13,15 @@ import {
   handleHomeTraining,
   handleMenu,
   handleProfileMenu,
-  handleSelectDailyTraining,
+  handleProTrainingMenu,
+  handleSelectDailyHomeTraining,
+  handleSelectDailyProTraining,
+  handleSelectDailyTrainingType,
   handleTrainingMenu,
   handleVirtualSpecialistMenu,
 } from "../handlers/stepHandler";
 import { handleProfileOptions } from "../handlers/profileMenuHandler";
-import { handleTrainingOptions } from "../handlers/trainingMenuHandler";
+import { handleTrainingOptions } from "../handlers/proTrainingMenuHandler";
 import { mainMenu } from "./flows/mainMenu";
 import { handleIntrodutionOptions } from "../handlers/introdutionHandler";
 import { env } from "../config/env";
@@ -112,10 +115,13 @@ export async function route(
     main_menu: handleMenu,
     profile_menu: handleProfileMenu,
     training_menu: handleTrainingMenu,
+    pro_training_menu: handleProTrainingMenu,
     home_training_menu: handleHomeTraining,
-    select_daily_training: handleSelectDailyTraining,
-    virtual_specialist_menu: handleVirtualSpecialistMenu,
     confirm_daily_motivation: handleConfirmDailyMotivation,
+    select_daily_training_type: handleSelectDailyTrainingType,
+    select_daily_pro_training: handleSelectDailyProTraining,
+    select_daily_home_training: handleSelectDailyHomeTraining,
+    virtual_specialist_menu: handleVirtualSpecialistMenu,
     ...handleProfileOptions(),
     ...handleTrainingOptions(),
     ...handleHomeTrainingOptions(),

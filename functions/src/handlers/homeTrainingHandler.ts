@@ -3,9 +3,7 @@ import { hasRequiredInfos } from "../services/userService";
 import { generateHomeTrain } from "../services/openAiService";
 import { WeekDay } from "../models/trainingPlan";
 import { setSession } from "../services/firestoreService";
-import { trainingMenu } from "../bot/flows/trainingMenu";
 import { sendMessage } from "../services/twilioService";
-import { trainingHome } from "../bot/flows/trainingHome";
 import {
   getUserHomeTraining,
   setHomeTrainingPlan,
@@ -14,11 +12,12 @@ import {
   convertToHomeTrainingPlan,
   HomeTrainingPlan,
 } from "../models/homeTraining";
+import { homeTrainingMenu } from "../bot/flows/homeTrainingMenu";
 
 export function handleHomeTrainingOptions(): Record<
   string,
   (user: UserDoc, msg: string) => Promise<{ msg: string; mediaUrl?: string }>
-  > {
+> {
   return {
     see_home_training_confirm: handleSelectHomeTrainingDay,
     generate_home_train: handleGenerateHomeTrainings,
@@ -33,14 +32,15 @@ export async function handleSelectHomeTrainingDay(
 
   if (command === "0") {
     await setSession(user.id, { step: "home_training_menu" });
-    return { msg: trainingHome() };
+    return { msg: homeTrainingMenu() };
   }
 
   const training = await getUserHomeTraining(user.id);
   if (!training) {
     await setSession(user.id, { step: "home_training_menu" });
     return {
-      msg: "Você ainda não tem nenhum treino programado!\n" + trainingHome(),
+      msg:
+        "Você ainda não tem nenhum treino programado!\n" + homeTrainingMenu(),
     };
   }
 
@@ -85,8 +85,9 @@ export async function handleSelectHomeTrainingDay(
   return {
     msg:
       `${trainingText}\n` +
-      "❓ *Em caso de dúvidas, fale com um dos instrutores!* 💬\n\n" +
-      trainingHome(),
+      "❓ *Em caso de dúvidas, peça ajuda ao " +
+      "nosso especialista virtual ou veja vídeos de profissionais!* 💬\n\n" +
+      homeTrainingMenu(),
   };
 }
 
@@ -138,7 +139,8 @@ export function getUserTodayHomeTrain(training: HomeTrainingPlan): string {
   return (
     trainingText +
     "\n\n" +
-    "❓ *Em caso de dúvidas, fale com um dos instrutores!* 💬"
+    "❓ *Em caso de dúvidas, peça ajuda ao " +
+    "nosso especialista virtual ou veja vídeos de profissionais!* 💬"
   );
 }
 
@@ -150,7 +152,7 @@ export async function handleGenerateHomeTrainings(
 
   if (command === "0") {
     await setSession(user.id, { step: "home_training_menu" });
-    return { msg: trainingHome() };
+    return { msg: homeTrainingMenu() };
   }
 
   const days = parseInt(command);
@@ -171,7 +173,7 @@ export async function handleGenerateHomeTrainings(
         "Você ainda não completou todas as informações " +
         "necessárias pra gerar um treino.\n\n" +
         "Vá para a seção de perfil e verifique.\n" +
-        `\n${trainingHome()}`,
+        `\n${homeTrainingMenu()}`,
     };
   }
 
@@ -187,5 +189,7 @@ export async function handleGenerateHomeTrainings(
   await setHomeTrainingPlan(homePrainingPlan, user.id);
   await setSession(user.id, { step: "home_training_menu" });
 
-  return { msg: `🚀 Treino novo criado com sucesso!\n\n${trainingMenu()}` };
+  return {
+    msg: `🚀 Treino novo criado com sucesso!\n\n${homeTrainingMenu()}`,
+  };
 }

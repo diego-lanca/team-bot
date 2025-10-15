@@ -12,13 +12,18 @@ import {
   getWeeklyUserTrainings,
 } from "../services/trainingPlanService";
 import { scheduleMessage } from "../services/twilioService";
-import { getUserTodayTrain } from "./trainingMenuHandler";
+import { getUserTodayTrain } from "./proTrainingMenuHandler";
 import { env } from "../config/env";
-import { trainingHome } from "../bot/flows/trainingHome";
 import {
+  getUserHomeTraining,
   getUserHomeTrainings,
   getWeeklyUserHomeTrainings,
 } from "../services/homeTrainingService";
+import { proTrainingMenu } from "../bot/flows/proTrainingMenu";
+import { homeTrainingMenu } from "../bot/flows/homeTrainingMenu";
+import { getUserTodayHomeTrain } from "./homeTrainingHandler";
+import { TrainingPlan } from "../models/trainingPlan";
+import { HomeTrainingPlan } from "../models/homeTraining";
 
 export async function handleMenu(
   user: UserDoc,
@@ -32,9 +37,8 @@ export async function handleMenu(
 
   const mapping: Record<string, { step: string; text: string }> = {
     "1": { step: "training_menu", text: trainingMenu() },
-    "2": { step: "home_training_menu", text: trainingHome() },
-    "3": { step: "virtual_specialist_menu", text: virtualSpecialistMenu() },
-    "4": { step: "profile_menu", text: profileMenu() },
+    "2": { step: "virtual_specialist_menu", text: virtualSpecialistMenu() },
+    "3": { step: "profile_menu", text: profileMenu() },
   };
 
   const choice = mapping[option] || mapping[msg.toLowerCase()];
@@ -182,6 +186,48 @@ export async function handleTrainingMenu(
     { step: string; question: string; mediaUrl?: string }
   > = {
     "1": {
+      step: "pro_training_menu",
+      question: proTrainingMenu(),
+    },
+    "2": {
+      step: "home_training_menu",
+      question: homeTrainingMenu(),
+    },
+    "0": {
+      step: "main_menu",
+      question: mainMenu(),
+      mediaUrl: env.TEAMBOT_LOGO_URL,
+    },
+  };
+
+  const choice = mapping[option];
+
+  if (!choice) {
+    const validOptions = Object.keys(mapping)
+      .map((key) => `"${key}"`)
+      .join(", ");
+    return {
+      msg:
+        `Opção inválida, ${user.name}. Por favor, ` +
+        `escolha uma das opções: ${validOptions}.`,
+    };
+  }
+
+  await setSession(user.id, { step: choice.step });
+  return { msg: choice.question, mediaUrl: choice.mediaUrl };
+}
+
+export async function handleProTrainingMenu(
+  user: UserDoc,
+  msg: string
+): Promise<{ msg: string; mediaUrl?: string }> {
+  const option = msg.trim().match(/\d+/)?.[0] || "";
+
+  const mapping: Record<
+    string,
+    { step: string; question: string; mediaUrl?: string }
+  > = {
+    "1": {
       step: "see_training_confirm",
       question: await getUserTrainings(user),
     },
@@ -198,7 +244,7 @@ export async function handleTrainingMenu(
         (await getWeeklyUserTrainings(user)) +
         "❓ *Em caso de dúvidas, fale com um dos instrutores!* 💬" +
         +"\n\n" +
-        trainingMenu(),
+        proTrainingMenu(),
     },
     "0": {
       step: "main_menu",
@@ -251,7 +297,7 @@ export async function handleHomeTraining(
         (await getWeeklyUserHomeTrainings(user)) +
         "❓ *Em caso de dúvidas, fale com um dos instrutores!* 💬" +
         +"\n\n" +
-        trainingHome(),
+        homeTrainingMenu(),
     },
     "0": {
       step: "main_menu",
@@ -295,6 +341,28 @@ export async function handleVirtualSpecialistMenu(
   return { msg: response };
 }
 
+export async function handleSelectDailyTrainingType(
+  user: UserDoc,
+  msg: string
+): Promise<{ msg: string; mediaUrl?: string }> {
+  const command = msg.trim().toLowerCase();
+
+  if (command === "0") {
+    await setSession(user.id, { step: "main_menu" });
+    return { msg: mainMenu(), mediaUrl: env.TEAMBOT_LOGO_URL };
+  }
+
+  if (command === "1") {
+    return { msg: await getUserDailyTrain(user, "pro") };
+  }
+
+  if (command === "2") {
+    return { msg: await getUserDailyTrain(user, "home") };
+  }
+
+  return { msg: "Selecione uma das opções válidas: 1️⃣ Academia ou 2️⃣ Casa." };
+}
+
 export async function handleConfirmDailyMotivation(
   user: UserDoc,
   msg: string
@@ -306,10 +374,32 @@ export async function handleConfirmDailyMotivation(
     return { msg: mainMenu(), mediaUrl: env.TEAMBOT_LOGO_URL };
   }
 
-  const training = await getUserTraining(user.id);
+  // 👉 Agora sempre pergunta qual tipo de treino o usuário quer
+  await setSession(user.id, { step: "select_daily_training_type" });
+
+  return {
+    msg:
+      "Escolha o tipo de treino de hoje:\n\n" +
+      "1️⃣ Treino na *Academia*\n" +
+      "2️⃣ Treino *em Casa*\n\n" +
+      "Digite o número da opção desejada.",
+  };
+}
+
+async function getUserDailyTrain(
+  user: UserDoc,
+  type: "home" | "pro"
+): Promise<string> {
+  const training: TrainingPlan | HomeTrainingPlan | null =
+    type === "pro"
+      ? await getUserTraining(user.id)
+      : await getUserHomeTraining(user.id);
 
   if (!user.chooseTrainOnDayMotivation) {
-    const trainingText = getUserTodayTrain(training!);
+    const trainingText =
+      type === "pro"
+        ? getUserTodayTrain(training!)
+        : getUserTodayHomeTrain(training!);
 
     if (user.trainingHour) {
       const now = new Date();
@@ -332,17 +422,24 @@ export async function handleConfirmDailyMotivation(
     }
 
     await setSession(user.id, { step: "main_menu" });
-    return {
-      msg: trainingText + "\nDigite *0* pra ver as opções do menu principal.",
-    };
+    return trainingText + "\nDigite *0* pra ver as opções do menu principal.";
   } else {
-    const trainingOptions = await getUserTrainings(user);
-    await setSession(user.id, { step: "select_daily_training" });
-    return { msg: trainingOptions };
+    const trainingOptions =
+      type === "pro"
+        ? await getUserTrainings(user)
+        : await getUserHomeTrainings(user);
+
+    const step =
+      type === "pro"
+        ? "select_daily_pro_training"
+        : "select_daily_home_training";
+
+    await setSession(user.id, { step });
+    return trainingOptions;
   }
 }
 
-export async function handleSelectDailyTraining(
+export async function handleSelectDailyProTraining(
   user: UserDoc,
   msg: string
 ): Promise<{ msg: string; mediaUrl?: string }> {
@@ -355,7 +452,7 @@ export async function handleSelectDailyTraining(
 
   const training = await getUserTraining(user.id);
   if (!training) {
-    await setSession(user.id, { step: "training_menu" });
+    await setSession(user.id, { step: "pro_training_menu" });
     return {
       msg: "Você ainda não tem nenhum treino programado!\n" + trainingMenu(),
     };
@@ -410,6 +507,88 @@ export async function handleSelectDailyTraining(
           trainingText +
           "\n" +
           "❓ *Em caso de dúvidas, fale com um dos instrutores!* 💬",
+        userHour
+      );
+    }
+  }
+
+  await setSession(user.id, { step: "main_menu" });
+
+  return {
+    msg:
+      `${trainingText}` + "\nDigite *0* pra ver as opções do menu principal.",
+  };
+}
+
+export async function handleSelectDailyHomeTraining(
+  user: UserDoc,
+  msg: string
+): Promise<{ msg: string; mediaUrl?: string }> {
+  const command = msg.trim().toLowerCase();
+
+  if (command === "0") {
+    await setSession(user.id, { step: "main_menu" });
+    return { msg: mainMenu(), mediaUrl: env.TEAMBOT_LOGO_URL };
+  }
+
+  const training = await getUserHomeTraining(user.id);
+  if (!training) {
+    await setSession(user.id, { step: "home_training_menu" });
+    return {
+      msg: "Você ainda não tem nenhum treino programado!\n" + trainingMenu(),
+    };
+  }
+
+  const daysArray = Object.entries(training.week).map(([key, day]) => ({
+    key,
+    ...day,
+  }));
+
+  const selectedIdx = parseInt(command) - 1;
+  if (
+    isNaN(selectedIdx) ||
+    selectedIdx < 0 ||
+    selectedIdx >= daysArray.length
+  ) {
+    return { msg: "Opção inválida. Digite o número do treino que deseja ver." };
+  }
+
+  const selectedDay = daysArray[selectedIdx];
+  let trainingText = `📌 Treino: ${selectedDay.name}\n\n`;
+
+  if (selectedDay.exercises.length > 0) {
+    trainingText += "🏋️ *Exercícios*:\n";
+    selectedDay.exercises.forEach((ex, idx) => {
+      trainingText += `   ${idx + 1}. ${ex.name}\n`;
+      if (ex.sets) trainingText += `      • Séries: ${ex.sets}\n`;
+      if (ex.reps) trainingText += `      • Repetições: ${ex.reps}\n`;
+      if (ex.tempo_min) trainingText += `      • Tempo: ${ex.tempo_min} mins\n`;
+      if (ex.tempo_seg) trainingText += `      • Tempo: ${ex.tempo_seg} segs\n`;
+      if (ex.restSeconds) {
+        trainingText += `      • Descanso: ${ex.restSeconds}s\n`;
+      }
+      if (ex.notes) trainingText += `      • Obs: ${ex.notes}\n`;
+    });
+  } else {
+    trainingText += "   Nenhum exercício cadastrado.\n";
+  }
+
+  if (user.trainingHour) {
+    const now = new Date();
+    const userHour = getUserHourTraining(user);
+
+    const diff = userHour.getTime() - now.getTime();
+
+    if (diff > 5 * 60 * 1000) {
+      await scheduleMessage(
+        user.phone,
+        "💪 Bora pro treino de hoje!\n" +
+          "Nada de deixar pra depois — " +
+          "seu corpo e sua mente vão te agradecer.\n🔥" +
+          trainingText +
+          "\n" +
+          "❓ *Em caso de dúvidas, peça ajuda ao " +
+          "nosso especialista virtual ou veja vídeos de profissionais!* 💬",
         userHour
       );
     }

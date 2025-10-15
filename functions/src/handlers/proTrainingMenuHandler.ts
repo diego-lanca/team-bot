@@ -11,8 +11,8 @@ import {
   WeekDay,
 } from "../models/trainingPlan";
 import { setSession } from "../services/firestoreService";
-import { trainingMenu } from "../bot/flows/trainingMenu";
 import { sendMessage } from "../services/twilioService";
+import { proTrainingMenu } from "../bot/flows/proTrainingMenu";
 
 export function handleTrainingOptions(): Record<
   string,
@@ -31,15 +31,17 @@ export async function handleSelectTrainingDay(
   const command = msg.trim().toLowerCase();
 
   if (command === "0") {
-    await setSession(user.id, { step: "training_menu" });
-    return { msg: trainingMenu() };
+    await setSession(user.id, { step: "pro_training_menu" });
+    return { msg: proTrainingMenu() };
   }
 
   const training = await getUserTraining(user.id);
   if (!training) {
-    await setSession(user.id, { step: "training_menu" });
+    await setSession(user.id, { step: "pro_training_menu" });
     return {
-      msg: "Você ainda não tem nenhum treino programado!\n" + trainingMenu(),
+      msg:
+        "Você ainda não tem nenhum treino programado!\n" +
+        proTrainingMenu(),
     };
   }
 
@@ -79,13 +81,13 @@ export async function handleSelectTrainingDay(
     trainingText += "   Nenhum exercício cadastrado.\n";
   }
 
-  await setSession(user.id, { step: "training_menu" });
+  await setSession(user.id, { step: "pro_training_menu" });
 
   return {
     msg:
       `${trainingText}\n` +
       "❓ *Em caso de dúvidas, fale com um dos instrutores!* 💬\n\n" +
-      trainingMenu(),
+      proTrainingMenu(),
   };
 }
 
@@ -148,8 +150,8 @@ export async function handleGenerateTrainings(
   const command = msg.trim().toLowerCase();
 
   if (command === "0") {
-    await setSession(user.id, { step: "training_menu" });
-    return { msg: trainingMenu() };
+    await setSession(user.id, { step: "pro_training_menu" });
+    return { msg: proTrainingMenu() };
   }
 
   const days = parseInt(command);
@@ -164,13 +166,13 @@ export async function handleGenerateTrainings(
 
   const requiredInfos = hasRequiredInfos(user);
   if (!requiredInfos) {
-    await setSession(user.id, { step: "training_menu" });
+    await setSession(user.id, { step: "pro_training_menu" });
     return {
       msg:
         "Você ainda não completou todas as informações " +
         "necessárias pra gerar um treino.\n\n" +
         "Vá para a seção de perfil e verifique.\n" +
-        `\n${trainingMenu()}`,
+        `\n${proTrainingMenu()}`,
     };
   }
 
@@ -184,7 +186,7 @@ export async function handleGenerateTrainings(
   const trainingPlan = convertToTrainingPlan(train, user.id);
 
   await setTrainingPlan(trainingPlan, user.id);
-  await setSession(user.id, { step: "training_menu" });
+  await setSession(user.id, { step: "pro_training_menu" });
 
-  return { msg: `🚀 Treino novo criado com sucesso!\n\n${trainingMenu()}` };
+  return { msg: `🚀 Treino novo criado com sucesso!\n\n${proTrainingMenu()}` };
 }
