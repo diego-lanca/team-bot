@@ -112,7 +112,7 @@ export const onMessage = onRequest(
 export const generateAndSendDayMotivation = onSchedule(
   {
     region: "southamerica-east1",
-    schedule: "every day 06:00",
+    schedule: "every day 08:00",
     timeZone: "America/Sao_Paulo",
   },
   async () => {
