@@ -14,7 +14,8 @@ export async function sendMessage(
 ): Promise<void> {
   const contentSidMapping: Record<string, boolean> = {
     HX7ee867afe41d6ad43796d4645744f412: true,
-    HX6e37ac0dc8ee468f5d91af5bbaa889b8: true,
+    HX6e37ac0dc8ee468f5d91af5bbaa889b8: true, // Day Motivation
+    HX63dcb4410b94d52674935c168cd0f460: true, // Day Motivation v2
   };
 
   const MAX_LENGTH = 1500;

@@ -6,6 +6,7 @@ import { onSchedule } from "firebase-functions/scheduler";
 import { sendMessage } from "../services/twilioService";
 import PromisePool from "@supercharge/promise-pool";
 import { setSession } from "../services/firestoreService";
+import { generateDayMotivation } from "../services/openAiService";
 // import { sendMessage } from "../services/twilioService";
 
 // Função onMessage
@@ -122,6 +123,7 @@ export const generateAndSendDayMotivation = onSchedule(
     const dateFormatted = new Intl.DateTimeFormat("pt-BR").format(start);
 
     const users = await getUsersWithTermsAndTrain();
+    const dayMotivation = await generateDayMotivation();
 
     console.log(
       `📋 ${users.length} usuários com treinos e termos aceitos encontrados.`
@@ -140,9 +142,9 @@ export const generateAndSendDayMotivation = onSchedule(
         try {
           await sendMessage(
             user.phone,
-            "HX6e37ac0dc8ee468f5d91af5bbaa889b8",
+            "HX63dcb4410b94d52674935c168cd0f460",
             "",
-            `{"1":"${user.name}","2":"${dateFormatted}"}`
+            `{"1":"${user.name}","2":"${dateFormatted}","3":"${dayMotivation}"}`
           );
 
           await setSession(user.id, { step: "confirm_daily_motivation" });
