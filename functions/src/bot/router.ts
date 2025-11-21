@@ -76,9 +76,17 @@ export async function route(
     await upsertSubscription(user.id, {
       userId: user.id,
       createdAt: Timestamp.fromDate(new Date()),
-      status: "active",
+      status: "canceled",
       updatedAt: Timestamp.fromDate(new Date()),
     });
+
+    return {
+      msg:
+        "⚠️ Olá! Seu plano não está ativo no momento, por isso o " +
+        "bot está temporariamente indisponível. " +
+        "Assim que o pagamento for confirmado, " +
+        "você será liberado e conversaremos sobre seus treinos! 😊",
+    };
   } else {
     if (subscription.status !== "active") {
       return {

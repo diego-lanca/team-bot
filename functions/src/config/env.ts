@@ -7,4 +7,5 @@ export const env = {
   GENERATE_TRAIN_TEXT: process.env.GENERATE_TRAIN_TEXT ?? "",
   GENERATE_HOME_TRAIN_TEXT: process.env.GENERATE_HOME_TRAIN_TEXT ?? "",
   TEAMBOT_LOGO_URL: process.env.TEAMBOT_LOGO_URL ?? "",
+  KIWIFY_SECRET: process.env.KIWIFY_SECRET ?? "",
 };
